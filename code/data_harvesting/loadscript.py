@@ -19,6 +19,7 @@ Y_set = file_y.create_dataset('Y',(3777,8),chunks=(1,8),dtype='i8')
 Z = np.zeros((3777,10)) #picture size category             
 size_dict = []  #dict for sizes.
 
+running_idx = 0
 for i,d in enumerate(dict):                 #parse all subdirections
     print(d)
     files = listdir(dir+"/"+d)              #get all files
@@ -32,15 +33,15 @@ for i,d in enumerate(dict):                 #parse all subdirections
             for k, s in enumerate(size_dict):            
                 if img.shape == s:
                     prt=False                
-                    Z[i+j,k]=1                
+                    Z[running_idx,k]=1                
             if prt:
                 size_dict.append(img.shape)
-                Z[i+j,len(size_dict)]=1
+                Z[running_idx,len(size_dict)]=1
             
-            print(i+j, img.shape)
+            print(running_idx, img.shape)
             current_img = np.zeros((1,974,1518,3))  
             current_img[0,0:img.shape[0],0:img.shape[1],:]=img
-            X_set[i+j,:,:,:] = current_img;     #add to file; beyond frame = zeros...
-            Y_set[i+j,i]=1                          #store target category
-
+            X_set[running_idx,:,:,:] = current_img;     #add to file; beyond frame = zeros...
+            Y_set[running_idx,i]=1                          #store target category
+            running_idx += 1
         

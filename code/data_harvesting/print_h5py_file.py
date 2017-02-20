@@ -31,7 +31,7 @@ def print_hdf5_item_structure(g, offset='    ') :
             print offset, key, #,"   ", subg.name #, val, subg.len(), type(subg),
             print_hdf5_item_structure(subg, offset + '    ')
 
-no = 3
+no = 16
 
 hdf5_file_name = 'Y_mat.h5py'
 print_hdf5_file_structure(hdf5_file_name)

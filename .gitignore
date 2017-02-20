@@ -1,1 +1,4 @@
 *.DS_Store*
+data/train
+data/test_stg1
+data/sample_submission_stg1.csv

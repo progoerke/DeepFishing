@@ -11,10 +11,13 @@ dir = "../../data/small_train"               #location of 'train'
 subdirs = listdir(dir)[1::]
 print(subdirs)
 
+#pictures
 file = h5py.File("X_mat.h5py",'w')
+# Can this work dynamically, I mean the size?
 X_set = file.create_dataset("X",(3777,974,1518,3),chunks = (1,974,1518,3),dtype = 'f')
 #picture category
 file_y = h5py.File("Y_mat.h5py",'w')
+# Can this work dynamically, I mean the size?
 Y_set = file_y.create_dataset('Y',(3777,8),chunks=(1,8),dtype='i8')
 Z = np.zeros((3777,10)) #picture size category             
 size_dict = []  #dict for sizes.

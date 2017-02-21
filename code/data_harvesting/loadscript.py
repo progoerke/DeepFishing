@@ -5,6 +5,7 @@ import numpy as np
 import matplotlib.pylab as plt
 from  os import listdir
 import pickle
+import time
 
 def load_img_size_number(s1,s2,no):
 
@@ -23,6 +24,7 @@ def load_img_size_number(s1,s2,no):
     for i,d in enumerate(dict):                 #parse all subdirections
         #print(d)
         sys.stdout.write(".")
+        sys.stdout.flush()
         
         files = listdir(dir+"/"+d)              #get all files
 
@@ -45,12 +47,22 @@ def load_img_size_number(s1,s2,no):
                 #current_img[0,0:img.shape[0],0:img.shape[1],:]=img
                 
                 # Get from heatmap/box
-                center_row = 100
-                center_col = 100
+                center_row = 250
+                center_col = 500
                 start_crop_row = int(center_row - s1/2)
+                if start_crop_row < 0:
+                    start_crop_row = 0
                 stop_crop_row = int(start_crop_row + s1)
+                if stop_crop_row > img.shape[0]:
+                    stop_crop_row = img.shape[0]
+                    start_crop_row = stop_crop_row - s1
                 start_crop_col = int(center_row - s2/2)
+                if start_crop_col < 0:
+                    start_crop_col = 0
                 stop_crop_col = int(start_crop_col + s2)
+                if stop_crop_col > img.shape[1]:
+                    stop_crop_col = img.shape[1]
+                    start_crop_col = stop_crop_col - s2
 
                 current_img = img[start_crop_row:stop_crop_row,start_crop_col:stop_crop_col,:]
 
@@ -65,7 +77,7 @@ def load_img_size_number(s1,s2,no):
     #pictures
     # pickle.dump(X,open('X_mat.pkl','wb'))
     # pickle.dump(Y,open('Y_mat.pkl','wb'))
-    # sys.stdout.write('\n Done :)')
+    # sys.stdout.write('\n Pickle done')
     
     file = h5py.File("X_mat.h5py",'w')
     # Can this work dynamically, I mean the size?
@@ -77,8 +89,16 @@ def load_img_size_number(s1,s2,no):
     Y_set = file_y.create_dataset('Y',data=Y)
     file_y.close()
     #print(size_dict)
-    sys.stdout.write('\n Also hdf5?!')
+    sys.stdout.write('\n Doooone :)\n')
 
+start = time.time()
 #load_img_size_number(100,100,16) #smaller_train pkl: 12,2MB h5py: 3,8MB
 #load_img_size_number(100,100,40) #small_train pkl: 30,3MB h5py: 9,6MB
-load_img_size_number(100,100,3777) #train pkl: --- h5py: 906,5MB
+load_img_size_number(200,200,3777)
+end = time.time()
+print(end - start)
+#100, 100, train pkl: --- h5py: 906,5MB
+#200, 200, train pkl: --- h5py: 3,63GB 7,8 sec
+#300, 300, train pkl: --- h5py: 8,16GB 18.6 sec
+#400, 400, train pkl: --- h5py: 14,5GB 31.3 sec
+#500, 500, train pkl: --- h5py: 22,7GB 46.9 sec

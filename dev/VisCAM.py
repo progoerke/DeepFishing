@@ -1,6 +1,9 @@
 import cv2
 import numpy as np
 import os
+import sys
+
+sys.path.append('/usr/local/lib/python2.7/site-packages')
 
 from keras.preprocessing.image import img_to_array
 from vis.utils import utils

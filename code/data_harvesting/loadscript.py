@@ -44,7 +44,13 @@ for i,d in enumerate(dict):                 #parse all subdirections
             print(running_idx, img.shape)
             current_img = np.zeros((1,974,1518,3))  
             current_img[0,0:img.shape[0],0:img.shape[1],:]=img
+            
+            # alter current_img
+            # our code here:
+            #...
+
             X_set[running_idx,:,:,:] = current_img;     #add to file; beyond frame = zeros...
             Y_set[running_idx,i]=1                          #store target category
             running_idx += 1
-        
+
+print(size_dict)

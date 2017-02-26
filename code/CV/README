@@ -1,0 +1,2 @@
+Notice that the code has a variabel SAMP_SIZE that I kept so I could be able to run the script in my machine.
+Due to that variable, only 20 pictures of each class are used for creating the folds. This variable should be eliminated once we create the final pipeline.

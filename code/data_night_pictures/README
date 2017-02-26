@@ -1,0 +1,5 @@
+The file dayNight.txt contains the output of the script. The values 0 and 1 indicate the cluster to which the picture belongs. Each line corresponds to one class of fish (ALB (1), BET(2), DOL(3), LAG(4), NoF(5), OTHER(6), SHARK(7), YFT(8))
+
+Notice that, since we are using a KNN algorithm for clustering, the value "1" does not always correspond to night pictures. We could easily change that if we finally use the script in the pipeline.
+
+In the example file, the value "0" refers to normal pictures and value "1" to night pictures.

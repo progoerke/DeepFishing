@@ -1,0 +1,3 @@
+All the sequences included in the JSON file are the original ones included in https://www.kaggle.com/c/the-nature-conservancy-fisheries-monitoring/discussion/28225 (I manually added that big SHARK sequene of pictures that the author excluded).
+
+However, if you have a look at the data once it has been preprocessed, you can easily find more correlations. If we decide to use this script in the future, it might be necessary to account for this and look for all those sequences that are still not included in the JSON file.

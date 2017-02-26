@@ -37,8 +37,8 @@ def load(use_chached=True,filepath='data_mat.hdf5',crop_rows=200,crop_cols=200,n
             #print(f)
                 if not(f == '.DS_Store'):
                     current_img = imread(directories+"/"+d+"/"+f)#img_rows, img_cols, color_type, interp=interp, img_as_float=img_as_float)
-                    current_img = current_img[:, :, ::-1] # convert to bgr
-                    current_img = current_img.transpose((2, 0, 1))
+                    #current_img = current_img[:, :, ::-1] # convert to bgr
+                    #current_img = current_img.transpose((2, 0, 1)) #have color channel as first matrix dim
                     current_img = current_img.astype('float32')
                     current_img /= 255
 

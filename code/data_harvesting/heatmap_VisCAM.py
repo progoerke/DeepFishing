@@ -17,7 +17,7 @@ from visualization import visualize_cam # Local copy of visualize_cap.py that re
 from skimage import io
 from scipy.misc import imread, imresize
 
-from dataloadr import load_single_img
+from imgloader import load_single_img
 
 import cv2
 import numpy as np

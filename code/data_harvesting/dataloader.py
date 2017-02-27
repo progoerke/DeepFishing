@@ -10,19 +10,10 @@ import glob
 import math
 import time
 
-from heatmap_visCAM import heatmap
+from heatmap_VisCAM import heatmap
+from imgloader import load_single_img
 
 from scipy.misc import imread, imresize
-
-def load_single_img(path,convert_bgr=False,transpose=False):
-    current_img = imread(path)
-    if convert_bgr:
-        current_img = current_img[:, :, ::-1] # convert to bgr
-    if transpose:
-        current_img = current_img.transpose((2, 0, 1)) #have color channel as first matrix dim            
-    current_img = current_img.astype('float32')
-    current_img /= 255
-    return current_img
 
 def load_test(use_chached=True,filepath='test_mat.hdf5',crop_rows=200,crop_cols=200,no=1000):
     directories = "../../data/test_stg1"               #location of 'train'
@@ -50,12 +41,12 @@ def load_test(use_chached=True,filepath='test_mat.hdf5',crop_rows=200,crop_cols=
 
                 # Get from heatmap/box
                 
-                _,max_idx,_ = heatmap(current_img)
-                center_row = max_idx[0]
-                center_col = max_idx[1]
+                #_,max_idx,_ = heatmap(current_img)
+                #center_row = max_idx[0]
+                #center_col = max_idx[1]
 
-                #center_row = 250
-                #center_col = 500
+                center_row = 250
+                center_col = 500
                 start_crop_row = int(center_row - crop_rows/2)
                 if start_crop_row < 0:
                     start_crop_row = 0
@@ -154,11 +145,11 @@ def load_train(use_chached=True,filepath='train_mat.hdf5',crop_rows=200,crop_col
     sys.stdout.write('\n Doooone :)\n')
     return images, targets
 
+# start = time.time()
+# load_test(use_chached=False,crop_rows=200,crop_cols=200)
+# end = time.time()
+# print(end - start)
 ##626.100456237793
-start = time.time()
-load_test(use_chached=False,crop_rows=200,crop_cols=200)
-end = time.time()
-print(end - start)
 start = time.time()
 load_train(use_chached=False,crop_rows=200,crop_cols=200)
 end = time.time()

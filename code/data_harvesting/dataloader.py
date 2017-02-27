@@ -15,7 +15,7 @@ from imgloader import load_single_img
 
 from scipy.misc import imread, imresize
 
-def load_test(use_chached=True,filepath='test_mat.hdf5',crop_rows=200,crop_cols=200,no=1000):
+def load_test(use_chached=True,filepath='test_mat.hdf5',crop_rows=200,crop_cols=200,no=1000,use_heatmap=False):
     directories = "../../data/test_stg1"               #location of 'train'
     #subdirs = listdir(directories)[1::]
     #print(subdirs)
@@ -39,14 +39,16 @@ def load_test(use_chached=True,filepath='test_mat.hdf5',crop_rows=200,crop_cols=
 
                 #print(current_img.shape)
 
+                if use_heatmap:
+                    _,max_idx,_ = heatmap(current_img)
+                    center_row = max_idx[0]
+                    center_col = max_idx[1]
                 # Get from heatmap/box
-                
-                #_,max_idx,_ = heatmap(current_img)
-                #center_row = max_idx[0]
-                #center_col = max_idx[1]
+                else:
+                    center_row = 250
+                    center_col = 500
 
-                center_row = 250
-                center_col = 500
+
                 start_crop_row = int(center_row - crop_rows/2)
                 if start_crop_row < 0:
                     start_crop_row = 0
@@ -77,7 +79,7 @@ def load_test(use_chached=True,filepath='test_mat.hdf5',crop_rows=200,crop_cols=
     sys.stdout.write('\n Doooone :)\n')
     return images
 
-def load_train(use_chached=True,filepath='train_mat.hdf5',crop_rows=200,crop_cols=200,no=3777):
+def load_train(use_chached=True,filepath='train_mat.hdf5',crop_rows=200,crop_cols=200,no=3777,use_heatmap=False):
     fish = ['ALB','BET','DOL','LAG','NoF','OTHER','SHARK','YFT']
     directories = "../../data/train"               #location of 'train'
     #subdirs = listdir(directories)[1::]
@@ -101,17 +103,19 @@ def load_train(use_chached=True,filepath='train_mat.hdf5',crop_rows=200,crop_col
             for j, f in enumerate(files):           #parse through all files
             #print(f)
                 if not(f == '.DS_Store'):
-                    current_img = imread(directories+"/"+d+"/"+f)#img_rows, img_cols, color_type, interp=interp, img_as_float=img_as_float)
-                    #current_img = current_img[:, :, ::-1] # convert to bgr
-                    #current_img = current_img.transpose((2, 0, 1)) #have color channel as first matrix dim
-                    current_img = current_img.astype('float32')
-                    current_img /= 255
-
+                    current_img = load_single_img(directories+"/"+f)
+                    
                     #print(current_img.shape)
 
+                    if use_heatmap:
+                        _,max_idx,_ = heatmap(current_img)
+                        center_row = max_idx[0]
+                        center_col = max_idx[1]
                     # Get from heatmap/box
-                    center_row = 250
-                    center_col = 500
+                    else:
+                        center_row = 250
+                        center_col = 500
+
                     start_crop_row = int(center_row - crop_rows/2)
                     if start_crop_row < 0:
                         start_crop_row = 0
@@ -150,6 +154,7 @@ def load_train(use_chached=True,filepath='train_mat.hdf5',crop_rows=200,crop_col
 # end = time.time()
 # print(end - start)
 ##626.100456237793
+##548.030868053
 start = time.time()
 load_train(use_chached=False,crop_rows=200,crop_cols=200)
 end = time.time()

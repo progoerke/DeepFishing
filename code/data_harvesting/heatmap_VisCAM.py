@@ -69,12 +69,12 @@ def heatmap(img):
     return heatmap_orig, max_orig, prob_fish
     #return None, None, None
 
-start = time.time()
-current_img = load_single_img("../../data/train/ALB/img_00003.jpg")
-h,m,p = heatmap(current_img)
-print('Max',m)
-print('Prob',p)
-end = time.time()
-print(end - start)
-plt.imshow(h)
-plt.show()
+# start = time.time()
+# current_img = load_single_img("../../data/train/ALB/img_00003.jpg")
+# h,m,p = heatmap(current_img)
+# print('Max',m)
+# print('Prob',p)
+# end = time.time()
+# print(end - start)
+# plt.imshow(h)
+# plt.show()

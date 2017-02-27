@@ -3,7 +3,7 @@ import numpy as np
 import os
 
 from keras.preprocessing import image
-from imagenet_utils import preprocess_input
+from keras.applications.imagenet_utils import preprocess_input
 from keras.models import Model
 
 from keras.preprocessing.image import img_to_array
@@ -95,6 +95,7 @@ for path in image_paths:
     path_hm=path.replace('/train/', '/train/hm_')
     io.imsave(path_hm,heatmap_overlay_orig)
     heatmaps.append(heatmap_orig)
+    break
 
 np.savetxt(path_hm,prob_imgs)
 #cv2.imshow("Original image", seed_img)

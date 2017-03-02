@@ -5,8 +5,8 @@ from keras.applications.imagenet_utils import preprocess_input
 from keras.models import Model
 
 from keras.preprocessing.image import img_to_array
-from utils import utils
-from utils.vggnet import VGG16
+from vis.utils import utils
+from vis.utils.vggnet import VGG16
 from keras.applications.vgg19 import VGG19
 from keras.applications.resnet50 import ResNet50
 from keras.applications.inception_v3 import InceptionV3

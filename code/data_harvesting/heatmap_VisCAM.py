@@ -5,8 +5,8 @@ from keras.applications.imagenet_utils import preprocess_input
 from keras.models import Model
 
 from keras.preprocessing.image import img_to_array
-from vis.utils import utils
-from vis.utils.vggnet import VGG16
+from utils import utils
+from utils.vggnet import VGG16
 from keras.applications.vgg19 import VGG19
 from keras.applications.resnet50 import ResNet50
 from keras.applications.inception_v3 import InceptionV3
@@ -56,24 +56,28 @@ def heatmap(img):
     orig_size=img.shape
     target_size=(224,224) # VGG16, VGG19, ResNet50
     seed_img = cv2.resize(img, (target_size[1], target_size[0]))
+
     seed_array = np.array([img_to_array(seed_img)])
 
     probs = model.predict(seed_array)
     prob_fish = probs[0,pred_class]
     heatmap_overlay, heatmap, max_idx = visualize_cam(model, layer_idx, pred_class, seed_img, text=utils.get_imagenet_label(pred_class))
-    
-    heatmap_overlay_orig = cv2.resize(heatmap_overlay, (orig_size[2], orig_size[1]))
-    heatmap_orig = cv2.resize(heatmap, (orig_size[2], orig_size[1]))
-    max_orig=np.floor(max_idx[0]*orig_size[1]/target_size[0]), np.floor(max_idx[1]*orig_size[2]/target_size[1])
+
+    heatmap_overlay_orig = cv2.resize(heatmap_overlay, (orig_size[1], orig_size[0]))
+    heatmap_orig = cv2.resize(heatmap, (orig_size[1], orig_size[0]))
+    max_orig=np.floor(max_idx[0]*orig_size[0]/target_size[0]), np.floor(max_idx[1]*orig_size[1]/target_size[1])
 
     return heatmap_orig, max_orig, prob_fish
     #return None, None, None
 
 # start = time.time()
-# current_img = load_single_img("../../data/train/ALB/img_00003.jpg")
+# current_img = load_single_img("../../data/train/BET/img_00107.jpg",convert_bgr=True)
+#plt.imshow(current_img)
+#cv2.imshow('current',current_img)
 # h,m,p = heatmap(current_img)
 # print('Max',m)
 # print('Prob',p)
+# print(h.shape)
 # end = time.time()
 # print(end - start)
 # plt.imshow(h)

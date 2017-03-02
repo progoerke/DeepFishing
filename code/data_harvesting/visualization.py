@@ -6,10 +6,10 @@ from keras.layers.convolutional import Convolution2D
 from keras.layers.pooling import _Pooling2D
 from keras import backend as K
 
-from vis.losses import ActivationMaximization
-from vis.optimizer import Optimizer
-from vis.regularizers import TotalVariation, LPNorm
-from vis.utils import utils
+from losses import ActivationMaximization
+from optimizer import Optimizer
+from regularizers import TotalVariation, LPNorm
+from utils import utils
 
 
 def get_num_filters(layer):
@@ -143,7 +143,7 @@ def visualize_saliency(model, layer_idx, filter_indices,
         (ActivationMaximization(model.layers[layer_idx], filter_indices), 1)
     ]
     opt = Optimizer(model.input, losses)
-    grads = opt.minimize(max_iter=1, verbose=False, jitter=0, seed_img=seed_img)[1]
+    grads = opt.minimize(max_iter=1, verbose=False, seed_img=seed_img)[1]
 
     # We are minimizing loss as opposed to maximizing output as with the paper.
     # So, negative gradients here mean that they reduce loss, maximizing class probability.
@@ -228,45 +228,65 @@ def visualize_cam(model, layer_idx, filter_indices,
     losses = [
         (ActivationMaximization(model.layers[layer_idx], filter_indices), 1)
     ]
+    #cv2.imshow('seed1',seed_img)
+    #seed_img = np.array(seed_img, dtype='uint8')
 
     penultimate_output = model.layers[penultimate_layer_idx].output
     opt = Optimizer(model.input, losses, wrt=penultimate_output)
-    _, grads, penultimate_output_value = opt.minimize(seed_img, max_iter=1, jitter=0, verbose=False)
+    _, grads, penultimate_output_value = opt.minimize(seed_img, max_iter=1, verbose=False)
 
     # We are minimizing loss as opposed to maximizing output as with the paper.
     # So, negative gradients here mean that they reduce loss, maximizing class probability.
     grads *= -1
-
+    #print(grads.shape)
+    #grads = grads.transpose((2,1,0))
+    #grads = np.expand_dims(grads, axis=0)
+    #print(grads.shape)
+    # seed_img (224,224,3) uint8
+    # s_idx 0
+    # row_idx 1
+    # col_idx 2
+    # grads float32 1,7,7,512
     # Average pooling across all feature maps.
     # This captures the importance of feature map (channel) idx to the output
     s_idx, c_idx, row_idx, col_idx = utils.get_img_indices()
     weights = np.mean(grads, axis=(s_idx, row_idx, col_idx))
 
     # Generate heatmap by computing weight * output over feature maps
+    #ch = 3
+    # s = None
+    # rows = 224
+    # cols = 224
+
     s, ch, rows, cols = utils.get_img_shape(penultimate_output)
     heatmap = np.ones(shape=(rows, cols), dtype=np.float32)
     for i, w in enumerate(weights):
         heatmap += w * penultimate_output_value[utils.slicer[0, i, :, :]]
-
     # The penultimate feature map size is definitely smaller than input image.
+    
     s, ch, rows, cols = utils.get_img_shape(model.input)
     heatmap = cv2.resize(heatmap, (rows, cols), interpolation=cv2.INTER_CUBIC)
-
     # ReLU thresholding, normalize between (0, 1)
     heatmap = np.maximum(heatmap, 0)
     heatmap /= np.max(heatmap)
     max_idx = np.unravel_index(np.argmax(heatmap), heatmap.shape)
     heatmap[max_idx[0]-5:max_idx[0]+5, max_idx[1]-5:max_idx[1]+5]=0.5
     #heatmap[max_square]=255
-
     # Convert to heatmap and zero out low probabilities for a cleaner output.
-    heatmap_colored = cv2.applyColorMap(np.uint8(255*heatmap), cv2.COLORMAP_JET)
+    heatmap_colored = cv2.applyColorMap(np.uint8(heatmap*255), cv2.COLORMAP_JET)
     heatmap_colored[np.where(heatmap <= 0.2)] = 0
-    print heatmap_colored[max_idx]
-
+    # print(heatmap_colored[max_idx])
+    # print('shape',heatmap_colored.shape)
+    # print('type',heatmap_colored.dtype)
+    # print('min',np.min(heatmap_colored))
+    # print('max',np.max(heatmap_colored))
     if overlay:
         heatmap_overlay = cv2.addWeighted(seed_img, 1, heatmap_colored, 0.5, 0)
     if text:
         cv2.putText(heatmap_colored, text, (10, 25), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 0, 0), 2)
-    cv2.imshow("tt", heatmap_colored)
+    cv2.imshow('seed',seed_img)
+    cv2.imshow('heat',heatmap_colored)
+    cv2.imshow('overlay',heatmap_overlay)
+    #cv2.imshow("tt", heatmap_colored)
+    #cv2.imshow("ts", heatmap_overlay)
     return heatmap_overlay, heatmap_colored, max_idx

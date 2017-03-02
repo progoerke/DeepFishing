@@ -2,6 +2,7 @@ import h5py
 import sys
 import numpy as np
 import matplotlib.pylab as plt
+import cv2
 
 def print_hdf5_file_structure(file_name) :
     """Prints the HDF5 file structure"""
@@ -31,19 +32,14 @@ def print_hdf5_item_structure(g, offset='    ') :
             print(offset, key)#,"   ", subg.name #, val, subg.len(), type(subg),
             print_hdf5_item_structure(subg, offset + '    ')
 
-no = 16
-
-hdf5_file_name = 'Y_mat.h5py'
-print_hdf5_file_structure(hdf5_file_name)
-file    = h5py.File(hdf5_file_name, 'r')   # 'r' means that hdf5 file is open in read-only mode
-dataset = file['Y']
-print(dataset[no])
+no = 1
  
-hdf5_file_name = 'X_mat.h5py'
+hdf5_file_name = 'train_mat_smaller.hdf5'
 print_hdf5_file_structure(hdf5_file_name)
 file    = h5py.File(hdf5_file_name, 'r')   # 'r' means that hdf5 file is open in read-only mode
-dataset = file['X']
+dataset = file['images']
 img = np.array(dataset[no])
-plt.imshow(img.astype(float))
+cv2.imshow('yoo',img.astype(np.uint8))
+plt.imshow(img.astype(np.uint8))
 plt.show()
 sys.exit ( "End of test" )

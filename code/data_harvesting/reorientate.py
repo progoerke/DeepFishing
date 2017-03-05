@@ -100,7 +100,7 @@ def fisch_gericht(img,tx,ty):
     cv2.ellipse(ftr,(0,0),(45,15),45,0,360,(255,0,0), 2)
     ift = signal.fftconvolve(ftr,image_cropped)
     ift1 = signal.fftconvolve(np.rot90(ftr,2,[0,1]),image_cropped) 
-    if(np.sum(ift**2)-np.sum(ift1**2)):
+    if(np.sum(ift**2)<np.sum(ift1**2)):
         image_cropped = np.rot90(image_cropped,2,[0,1])
         heatmap_cropped = np.rot90(heatmap_cropped,2,[0,1])
         

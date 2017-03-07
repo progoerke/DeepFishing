@@ -10,8 +10,9 @@ import glob
 import math
 import time
 
-from heatmap_VisCAM import heatmap
-from imgloader import load_single_img
+#from heatmap_VisCAM import heatmap
+from code.data_harvesting.imgloader import load_single_img
+
 
 from scipy.misc import imread, imresize
 
@@ -93,7 +94,7 @@ def load_test(use_chached=True,filepath='test_mat.hdf5',crop_rows=200,crop_cols=
 def load_train(use_chached=True,filepath='train_mat.hdf5',crop_rows=400,crop_cols=400,no=3777,use_heatmap=False):
     #fish = ['ALB','BET','DOL','LAG','NoF','OTHER','SHARK','YFT']
     fish = ['BET']
-    directories = "../../data/smaller_train"               #location of 'train'
+    directories = "../data/train"               #location of 'train'
     #subdirs = listdir(directories)[1::]
     #print(subdirs)
 
@@ -182,9 +183,9 @@ def load_train(use_chached=True,filepath='train_mat.hdf5',crop_rows=400,crop_col
 # print(end - start)
 ##626.100456237793
 ##548.030868053
-start = time.time()
-load_train(use_chached=False,filepath='train_mat_smaller.hdf5',crop_rows=400,crop_cols=400, use_heatmap=True)
-end = time.time()
-print(end - start)
-plt.imshow([[1,0],[0,1]])
-plt.show()
+#start = time.time()
+#load_train(use_chached=False,filepath='train_mat_smaller.hdf5',crop_rows=400,crop_cols=400, use_heatmap=True)
+#end = time.time()
+#print(end - start)
+#plt.imshow([[1,0],[0,1]])
+#plt.show()

@@ -11,7 +11,7 @@ from sklearn.model_selection import KFold
 
 import numpy as np
 from random import randint
-import json
+import pickle 
 import collections
 
 # Stratified Cross-Validation approach.
@@ -42,7 +42,7 @@ def preprocess_image(img):
 def VGG_CV(data, data_labels, img_height = 400, img_width=400, n_clusts = 5, folds = 5, use_cached=False, path_cached='./cv/cv_data.json'):
 
     # Path where the CV data will be stored
-    cv_store = './cv/cv_data.json'
+    cv_store = './cv_data.pkl'
 
 #    if use_cached:
 #        with open(path_cached, 'r') as data_file:
@@ -59,18 +59,22 @@ def VGG_CV(data, data_labels, img_height = 400, img_width=400, n_clusts = 5, fol
     base_model = VGG16(weights = 'imagenet', include_top = False, input_shape = (img_height, img_width, 3))
     model = Model(input = base_model.input, output = base_model.get_layer('block4_pool').output)
 
-    cv_data = np.empty(len(data))
+    cv_data = np.zeros(len(data))
 
-    fish_per_label = collections.Counter(data_labels)
-
+    fish_per_label = np.sum(data_labels,axis=0)
+    print(fish_per_label)
     # Subsample data per class
-    for fish in np.unique(data_labels):
+    for fish in range(data_labels.shape[1]):
 
         num_pictures = fish_per_label[fish]
+        
+        if not num_pictures:
+            continue
+
         indexes = np.empty(num_pictures)
         cont = 0
-        for ind in range(0,data):
-            if data_labels[ind] == fish:
+        for ind in range(0,len(data)):
+            if data_labels[ind][fish] == 1:
                 indexes[cont] = ind
                 cont+=1
 
@@ -79,7 +83,7 @@ def VGG_CV(data, data_labels, img_height = 400, img_width=400, n_clusts = 5, fol
         cont1 = 0
         cont2 = 0
         for label in data_labels:
-            if label==fish:
+            if label[fish] == 1:
                 class_pictures[cont1] = data[cont2]
                 cont1+=1
             cont2+=1
@@ -108,20 +112,20 @@ def VGG_CV(data, data_labels, img_height = 400, img_width=400, n_clusts = 5, fol
                 fold = 0
                 for train, test in kf.split(instances):
                     for ind in test:
-                        cv_data[instances[ind]] = fold
+                        cv_data[int(instances[ind])] = fold
                     fold+=1
             else:   # If we have less instances than clusters
                 for instance in instances:
                     fold = randint(0, folds-1)
                     for i in range(0, folds):
                         if i == fold:
-                            cv_data[instance] = fold
+                            cv_data[int(instance)] = fold
 
     # Save data to JSON
-    with open(cv_store, 'w') as outfile:
-        json.dump(cv_data, outfile)
+    with open(cv_store, 'wb') as outfile:
+        pickle.dump(cv_data, outfile)
 
     return cv_data
 
-VGG_CV()
+#VGG_CV()
 #VGG_CV(use_cached=True)

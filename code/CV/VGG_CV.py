@@ -11,7 +11,6 @@ from sklearn.model_selection import KFold
 
 import numpy as np
 from random import randint
-from collections import defaultdict
 import json
 import collections
 
@@ -60,7 +59,7 @@ def VGG_CV(data, data_labels, img_height = 400, img_width=400, n_clusts = 5, fol
     base_model = VGG16(weights = 'imagenet', include_top = False, input_shape = (img_height, img_width, 3))
     model = Model(input = base_model.input, output = base_model.get_layer('block4_pool').output)
 
-    cv_data = np.empty([len(data[0]),2])
+    cv_data = np.empty(len(data))
 
     fish_per_label = collections.Counter(data_labels)
 
@@ -70,9 +69,9 @@ def VGG_CV(data, data_labels, img_height = 400, img_width=400, n_clusts = 5, fol
         num_pictures = fish_per_label[fish]
         indexes = np.empty(num_pictures)
         cont = 0
-        for ind in data:
+        for ind in range(0,data):
             if data_labels[ind] == fish:
-                indexes[cont] = data[0,:,:,:]
+                indexes[cont] = ind
                 cont+=1
 
         # Get pictures
@@ -88,7 +87,7 @@ def VGG_CV(data, data_labels, img_height = 400, img_width=400, n_clusts = 5, fol
         # Get features
         preprocessed_images = np.vstack([preprocess_image(fn) for fn in class_pictures])
         vgg_features = model.predict(preprocessed_images)
-        vgg_features = vgg_features.reshape(len(data_labels), -1)
+        vgg_features = vgg_features.reshape(len(data), -1)
 
         # Cluster
         km = KMeans(n_clusters = n_clusts, n_jobs = -1)
@@ -101,7 +100,6 @@ def VGG_CV(data, data_labels, img_height = 400, img_width=400, n_clusts = 5, fol
             inst.setdefault(v, []).append(k)
 
         # For each cluster
-        cont = 0
         for i in range(0, n_clusts):
             instances = inst[i]
             if len(instances) >= folds: # If we have more instances than clusters
@@ -109,19 +107,15 @@ def VGG_CV(data, data_labels, img_height = 400, img_width=400, n_clusts = 5, fol
                 kf = KFold(n_splits=folds)
                 fold = 0
                 for train, test in kf.split(instances):
-                    new_test = []
                     for ind in test:
-                        cv_data[cont] = indexes[ind]
-                        cont+=1
+                        cv_data[instances[ind]] = fold
                     fold+=1
             else:   # If we have less instances than clusters
                 for instance in instances:
                     fold = randint(0, folds-1)
                     for i in range(0, folds):
                         if i == fold:
-                            cv_data[cont] = indexes[ind]
-                            cont += 1
-
+                            cv_data[instance] = fold
 
     # Save data to JSON
     with open(cv_store, 'w') as outfile:

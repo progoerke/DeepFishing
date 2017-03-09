@@ -29,7 +29,7 @@ def data():
     
     cval_splits = 5
 
-    data, labels, _, _ = dataloader.load_train(use_chached=True), use_heatmap=True)
+    data, labels, _, _ = dataloader.load_train(use_chached=True, use_heatmap=True)
 
     cval_indx = CV.VGG_CV(data, labels, folds=cval_splits)
     indx = [np.where(cval_indx==ind) for ind in np.unique(cval_indx)]

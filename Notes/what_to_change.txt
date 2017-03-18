@@ -1,0 +1,24 @@
+installed keras-vis with
+
+pip3 install git+https://github.com/raghakot/keras-vis
+
+====
+
+Put training data in Pipeline/data/train/
+
+===
+
+changed
+
+def reverse_enumerate(iterable):
+    """Enumerate over an iterable in reverse order while retaining proper indexes, without creating any copies.
+    """
+    return itertool.izip(reversed(range(len(iterable))), reversed(iterable))
+
+
+    return zip(reversed(range(len(iterable))), reversed(iterable))
+
+
+line 31 in /usr/local/lib/python3.6/site-packages/vis/utils
+
+===

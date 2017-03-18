@@ -12,9 +12,9 @@ sys.path.insert(0,parentdir)
 from hyperopt import Trials, STATUS_OK, tpe
 from hyperopt import hp, fmin, tpe
 
-from code.data_harvesting import heatmap_VisCAM
-from code.data_harvesting import dataloader
-from code.CV import VGG_CV as CV
+import heatmap_VisCAM
+import dataloader
+import VGG_CV as CV
 
 
 #Insert your class here
@@ -29,7 +29,7 @@ def data():
     
     cval_splits = 5
 
-    data, labels, _, _ = dataloader.load_train(use_chached=True, use_heatmap=True)
+    data, labels, _, _ = dataloader.load_train(use_chached=False, use_heatmap=True)
 
     cval_indx = CV.VGG_CV(data, labels, folds=cval_splits)
     indx = [np.where(cval_indx==ind) for ind in np.unique(cval_indx)]

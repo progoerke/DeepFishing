@@ -10,14 +10,14 @@ import glob
 import math
 import time
 
-#from heatmap_VisCAM import heatmap
-from code.data_harvesting.imgloader import load_single_img
+from heatmap_VisCAM import heatmap
+from imgloader import load_single_img
 
 
 from scipy.misc import imread, imresize
 
 def load_test(use_chached=True,filepath='test_mat.hdf5',crop_rows=200,crop_cols=200,no=1000,use_heatmap=False):
-    directories = "../../data/test_stg1"               #location of 'train'
+    directories = "data/test_stg1"               #location of 'train'
     #subdirs = listdir(directories)[1::]
     #print(subdirs)
 
@@ -92,9 +92,9 @@ def load_test(use_chached=True,filepath='test_mat.hdf5',crop_rows=200,crop_cols=
     return images, ids, crop_idx
 
 def load_train(use_chached=True,filepath='train_mat.hdf5',crop_rows=400,crop_cols=400,no=3777,use_heatmap=False):
-    #fish = ['ALB','BET','DOL','LAG','NoF','OTHER','SHARK','YFT']
-    fish = ['BET']
-    directories = "../data/train"               #location of 'train'
+    fish = ['ALB','BET','DOL','LAG','NoF','OTHER','SHARK','YFT']
+    #fish = ['BET']
+    directories = "data/train"               #location of 'train'
     #subdirs = listdir(directories)[1::]
     #print(subdirs)
 

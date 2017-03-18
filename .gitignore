@@ -4,6 +4,9 @@ data/smaller_train
 data/test_stg1
 data/sample_submission_stg1.csv
 
+Pipeline/data/train
+
+
 *.h5py
 *.hdf5
 

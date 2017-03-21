@@ -4,7 +4,6 @@
 # In[4]:
 
 from keras import layers
-from keras.layers.core import  Lambda, Merge
 from keras.layers.convolutional import Convolution2D
 from keras import backend as K
 from keras.engine import Layer
@@ -12,7 +11,6 @@ from os import listdir
 from os.path import isfile, join, dirname
 from scipy.io import loadmat
 import gc
-from keras.utils.layer_utils import layer_from_config
 from keras.models import Model
 from keras.layers import *
 

@@ -56,7 +56,7 @@ class CCN():
         self.model.fit(X_train, Y_train, validation_data=(X_val, Y_val), callbacks=[early], batch_size = self.batch_size, nb_epoch = self.nb_epoch, verbose = 1)
 
     def predict(self, X_test):
-        self.model.predict_proba(X_test, batch_size = self.batch_size, verbose = 1)
+        return self.model.predict_proba(X_test, batch_size = self.batch_size, verbose = 1)
 
     def evaluate(self, X_val, Y_val):
         

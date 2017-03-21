@@ -284,9 +284,9 @@ def visualize_cam(model, layer_idx, filter_indices,
         heatmap_overlay = cv2.addWeighted(seed_img, 1, heatmap_colored, 0.5, 0)
     if text:
         cv2.putText(heatmap_colored, text, (10, 25), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 0, 0), 2)
-    cv2.imshow('seed',seed_img)
-    cv2.imshow('heat',heatmap_colored)
-    cv2.imshow('overlay',heatmap_overlay)
+    #cv2.imshow('seed',seed_img)
+    #cv2.imshow('heat',heatmap_colored)
+    #cv2.imshow('overlay',heatmap_overlay)
     #cv2.imshow("tt", heatmap_colored)
     #cv2.imshow("ts", heatmap_overlay)
     return heatmap_overlay, heatmap_colored, max_idx

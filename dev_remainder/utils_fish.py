@@ -132,11 +132,6 @@ def smart_scale(img, x, y):
     ari = img.shape[1]/img.shape[0]
     art = target_x/target_y
     
-    #dx = img.shape[1]/target_x
-    
-    #dy = img.shape[0]/target_y
-    
-    
     if (float(ari)/art)>1:
         img1,_,_ = scale_fish(img,target_x,int(int(img.shape[0])*target_x/int(img.shape[1])))
     else:
@@ -145,8 +140,7 @@ def smart_scale(img, x, y):
     black[::img1.shape[0],::img1.shape[1],:] = img1[:,:,:]
     
     return np.roll(np.roll(black,int((black.shape[0]-img1.shape[0])/2)axis = 0),int((black.shape[1]-img1.shape[1])/2)axis = 1)
-    
-    #return #crop_around(img1,target_x,target_y)[0]
+
     
     
     

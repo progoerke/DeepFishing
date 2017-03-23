@@ -96,7 +96,7 @@ def load_test(use_chached=True,filepath='test_mat.hdf5',crop_rows=400,crop_cols=
 def load_train(use_chached=True,filepath='train_mat.hdf5',crop_rows=400,crop_cols=400,no=3777,use_heatmap=False):
     fish = ['ALB','BET','DOL','LAG','NoF','OTHER','SHARK','YFT']
     #fish = ['BET']
-    directories = "data/train"               #location of 'train'
+    directories = "data/train_smaller"               #location of 'train'
     #subdirs = listdir(directories)[1::]
     #print(subdirs)
 
@@ -158,6 +158,9 @@ def load_train(use_chached=True,filepath='train_mat.hdf5',crop_rows=400,crop_col
                     crop_idx[total,3] = stop_crop_col
                     crop_idx[total,4] = center_row
                     crop_idx[total,5] = center_col
+
+                    current_img = current_img.astype('float32')
+                    current_img /= 255
 
                     current_img = current_img[start_crop_row:stop_crop_row,start_crop_col:stop_crop_col,:]
                     images[total, :, :, :] = current_img
@@ -221,8 +224,9 @@ def load_max_idx():
     
     sys.stdout.write('\n Doooone :)\n')
 
-
+load_train(use_chached=False, use_heatmap = True)
 #load_max_idx()
+
 # start = time.time()
 # load_test(use_chached=False,crop_rows=200,crop_cols=200)
 # end = time.time()

@@ -224,7 +224,7 @@ def load_max_idx():
     
     sys.stdout.write('\n Doooone :)\n')
 
-load_train(use_chached=False, use_heatmap = True)
+load_train(use_chached=False, use_heatmap = True,no=80)
 #load_max_idx()
 
 # start = time.time()

@@ -10,13 +10,13 @@ import glob
 import math
 import time
 
-from heatmap_VisCAM import heatmap
+from heatmap_VisCAM import Heatmap
 from imgloader import load_single_img
 
 
 from scipy.misc import imread, imresize
 
-def load_test(use_chached=True,filepath='test_mat.hdf5',crop_rows=200,crop_cols=200,no=1000,use_heatmap=False):
+def load_test(use_chached=True,filepath='test_mat.hdf5',crop_rows=400,crop_cols=400,no=1000,use_heatmap=False):
     directories = "data/test_stg1"               #location of 'train'
     #subdirs = listdir(directories)[1::]
     #print(subdirs)
@@ -25,14 +25,17 @@ def load_test(use_chached=True,filepath='test_mat.hdf5',crop_rows=200,crop_cols=
     if use_chached is False:
         print('create new hdf5 file')
         file = h5py.File(filepath, "w")
-
-        images = file.create_dataset("images", (num_total_images, crop_rows, crop_cols, 3), chunks=(64, crop_rows, crop_cols, 3), dtype='f', compression="lzf")
-        ids = file.create_dataset("ids", (num_total_images,1), chunks=(no_chunks,1), dtype='str')
+        no_chunks = 2
+        dt = h5py.special_dtype(vlen=bytes)
+        
+        images = file.create_dataset("images", (num_total_images, crop_rows, crop_cols, 3), chunks=(no_chunks, crop_rows, crop_cols, 3), dtype='f', compression="lzf")
+        ids = file.create_dataset("ids", (num_total_images,1), chunks=(no_chunks,1), dtype=dt)
         crop_idx = file.create_dataset("crop_idx", (num_total_images,6), chunks=(no_chunks,1), dtype='int32')
 
         print('Read test images')
         total = 0
         files = listdir(directories) 
+        h = Heatmap()
         for j, f in enumerate(files):           #parse through all files
             if ((j%100) == 0):
                 sys.stdout.write(".")
@@ -43,14 +46,13 @@ def load_test(use_chached=True,filepath='test_mat.hdf5',crop_rows=200,crop_cols=
                 #print(current_img.shape)
 
                 if use_heatmap:
-                    _,max_idx,_ = heatmap(current_img)
+                    _,max_idx,_ = h.heatmap(current_img)
                     center_row = max_idx[0]
                     center_col = max_idx[1]
                 # Get from heatmap/box
                 else:
                     center_row = 250
                     center_col = 500
-
 
                 start_crop_row = int(center_row - crop_rows/2)
                 if start_crop_row < 0:
@@ -69,7 +71,7 @@ def load_test(use_chached=True,filepath='test_mat.hdf5',crop_rows=200,crop_cols=
 
                 current_img = current_img[start_crop_row:stop_crop_row,start_crop_col:stop_crop_col,:]
                 images[total, :, :, :] = current_img
-                ids[total] = directories+"/"+d+"/"+f
+                ids[total] = directories+"/"+f
                 crop_idx[total,0] = start_crop_row
                 crop_idx[total,1] = stop_crop_row
                 crop_idx[total,2] = start_crop_col
@@ -112,6 +114,7 @@ def load_train(use_chached=True,filepath='train_mat.hdf5',crop_rows=400,crop_col
 
         print('Read train images')
         total = 0
+        h = Heatmap()
         for i,d in enumerate(fish): #parse all subdirections
             sys.stdout.write(".")
             sys.stdout.flush()
@@ -125,7 +128,7 @@ def load_train(use_chached=True,filepath='train_mat.hdf5',crop_rows=400,crop_col
                     #print(current_img.shape)
 
                     if use_heatmap:
-                        _,max_idx,_ = heatmap(current_img)
+                        _,max_idx,_ = h.heatmap(current_img)
                         print(max_idx)
                         center_row = max_idx[0]
                         center_col = max_idx[1]
@@ -190,6 +193,7 @@ def load_max_idx():
     print('Read train images')
     total = 0
     no = 0
+    model, layer_idx, pred_class = initialize()
     for i,d in enumerate(fish): #parse all subdirections
         sys.stdout.write(".")
         sys.stdout.flush()
@@ -202,7 +206,7 @@ def load_max_idx():
                 current_img = load_single_img(directories+"/"+d+"/"+f,convert_bgr=True)
                 #print(directories+"/"+d+"/"+f)
 
-                _,max_idx,_ = heatmap(current_img)
+                _,max_idx,_ = heatmap(current_img, model, layer_idx, pred_class)
                 #print(max_idx)
                 center_rows.append(max_idx[0])
                 center_cols.append(max_idx[1])
@@ -218,7 +222,7 @@ def load_max_idx():
     sys.stdout.write('\n Doooone :)\n')
 
 
-load_max_idx()
+#load_max_idx()
 # start = time.time()
 # load_test(use_chached=False,crop_rows=200,crop_cols=200)
 # end = time.time()

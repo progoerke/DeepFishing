@@ -16,6 +16,7 @@ import heatmap_VisCAM
 import dataloader
 import VGG_CV as CV
 
+from keras.models import load_model
 
 #Insert your class here
 from Classifiers.CCN import CCN
@@ -29,16 +30,22 @@ def data():
     
     cval_splits = 5
 
-    data, labels, _, _ = dataloader.load_train(use_chached=False, use_heatmap=True)
-
-    cval_indx = CV.VGG_CV(data, labels, folds=cval_splits)
+    data, labels, _, _ = dataloader.load_train(use_chached=True, use_heatmap=True)
+    print('loaded images')
+    print('start cross validation')
+    cval_indx = CV.VGG_CV(data, labels, folds=cval_splits, use_cached=True)
+    print('finished cross validation')
     indx = [np.where(cval_indx==ind) for ind in np.unique(cval_indx)]
 
-    train_indx = np.hstack(indx[:-1])
+    train_indx = np.hstack(indx[:-1])[0].tolist()
+    train_indx.sort()
+    print('Split train')
     X_train = data[train_indx]
     Y_train = labels[train_indx]
 
-    val_indx = indx[-1]
+    val_indx = indx[-1][0].tolist()
+    val_indx.sort()
+    print('Split validation')
     X_val = data[val_indx]
     Y_val = labels[val_indx]
 
@@ -52,16 +59,21 @@ Wrapper function to run model training and evaluation
 '''
 def run_model(params):  
 
-    classifier = CCN(size = (32, 32), nb_classes = 8, nb_epoch = 12, *params)
+    global best
+    global model
+
+    print(params)
+    classifier = CCN((X_train.shape[1], X_train.shape[2]),8,12,*params)
 
     classifier.fit(X_train, Y_train, X_val, Y_val)
     loss = classifier.evaluate(X_val, Y_val)
 
     if loss < best:
-        best = loss 
+        best = loss
+        model = classifier.model
         print('new best: ', best, params)
 
-    return {'loss': loss, 'status': STATUS_OK, 'model': model}
+    return {'loss': loss, 'status': STATUS_OK}
 
 
 def write_submission(predictions, filenames):
@@ -73,27 +85,29 @@ def write_submission(predictions, filenames):
         f.write('image,ALB,BET,DOL,LAG,NoF,OTHER,SHARK,YFT\n')
         for i, image_name in enumerate(filenames):
             pred = ['%.6f' % p for p in preds[i, :]]
-            f.write('%s,%s\n' % (os.path.basename(image_name), ','.join(pred)))
+            f.write('%s,%s\n' % (os.path.basename(str(image_name)), ','.join(pred)))
         print("Done.")
 
 if __name__ == '__main__':
 
+    global best
+    global model
     best = np.inf
     max_evals = 1
 
     X_train, Y_train, X_val, Y_val = data()
 
     space = CCN.space
-
+    print('start optimization')
     best_run = fmin(run_model, space, algo = tpe.suggest, max_evals = max_evals)
 
 
     print(best_run)
-    pickle.dumb(best_run, open('optResults.pkl', 'wb'))
-
-    test, filenames, _ = dataloader.load_test(use_chached=False, use_heatmap=True)
+    pickle.dump(best_run, open('models/ccn_loss-{}.pkl'.format(best), 'wb'))
+    model.save('models/ccn_loss-{}.h5'.format(best))
     
-    classifier = CCN(size = (32,32), nb_classes = 8, nb_epoch = 12, **best_run)
-    preds = classifier.predict(test)
-
+    #model = load_model('models/ccn_loss-8.677305794018922.h5')
+    test, filenames, _ = dataloader.load_test(use_chached=True, use_heatmap=True)
+    print(filenames) 
+    preds = model.predict(test)
     write_submission(preds, filenames)

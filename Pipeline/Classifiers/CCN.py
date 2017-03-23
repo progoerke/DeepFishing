@@ -11,7 +11,7 @@ class CCN():
 
     space = (
         hp.choice('batch_size', [8,16,32,64,128]),
-        hp.choice('nb_filters', [16, 32, 64, 128, 256]),
+        hp.choice('nb_filters', [16, 32, 64]),
         hp.choice('pool_size', [(2,2), (3,3), (4,4)]),
         hp.choice('kernel_size', [(3,3), (4,4), (5,5)]),
         hp.choice('optimizer', ['adam', 'adadelta'])
@@ -26,16 +26,17 @@ class CCN():
         self.kernel_size = kernel_size
         self.nb_epoch = nb_epoch
         self.optimizer = optimizer
-
+        
+        self.model = self.build()
 
     def build(self):
         model = self.model = Sequential()
 
-        model.add(Convolution2D(self.nb_filters, self.kernel_size[0], self.kernel_size[1], border_mode='valid', input_shape=(3,self.size[0], self.size[1]), dim_ordering='th'))
+        model.add(Convolution2D(self.nb_filters, self.kernel_size[0], self.kernel_size[1], border_mode='valid', input_shape=(self.size[0], self.size[1],3), dim_ordering='tf'))
         model.add(Activation('relu'))
-        model.add(Convolution2D(self.nb_filters, self.kernel_size[0], self.kernel_size[1], dim_ordering='th'))
+        model.add(Convolution2D(self.nb_filters, self.kernel_size[0], self.kernel_size[1], dim_ordering='tf'))
         model.add(Activation('relu'))
-        model.add(MaxPooling2D(pool_size = self.pool_size, dim_ordering='th'))
+        model.add(MaxPooling2D(pool_size = self.pool_size, dim_ordering='tf'))
         model.add(Dropout(0.25))
 
         model.add(Flatten())

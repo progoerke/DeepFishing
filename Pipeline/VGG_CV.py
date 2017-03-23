@@ -7,6 +7,7 @@ from keras.models import Model
 
 from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import KMeans
+from sklearn.decomposition import PCA
 from sklearn.model_selection import KFold
 
 import numpy as np
@@ -39,21 +40,15 @@ def preprocess_image(img):
 # seed  Seed for the random generator.
 #
 # Outputs list of tuples [index - fold]
-def VGG_CV(data, data_labels, img_height = 400, img_width=400, n_clusts = 5, folds = 5, use_cached=False, path_cached='./cv/cv_data.json'):
+def VGG_CV(data, data_labels, img_height = 400, img_width=400, n_clusts = 5, folds = 5, use_cached=False, path_cached='./cv_data.pkl'):
 
     # Path where the CV data will be stored
     cv_store = './cv_data.pkl'
 
-#    if use_cached:
-#        with open(path_cached, 'r') as data_file:
-#            data = json.load(data_file)
-#            cv_data = defaultdict(lambda  : defaultdict(list))
-#             cont = 0
-#            for cv in data:
-#                cv_data[cont][0].append(data[cont]['data']['0'])
-#                cv_data[cont][1].append(data[cont]['data']['1'])
-#                cont +=1
-#            return data
+    if use_cached:
+        with open(path_cached, 'rb') as data_file:
+            data = pickle.load(data_file)
+            return data
 
     # Model
     base_model = VGG16(weights = 'imagenet', include_top = False, input_shape = (img_height, img_width, 3))
@@ -67,42 +62,44 @@ def VGG_CV(data, data_labels, img_height = 400, img_width=400, n_clusts = 5, fol
     for fish in range(data_labels.shape[1]):
 
         num_pictures = fish_per_label[fish]
-        
+        print(num_pictures) 
         if not num_pictures:
             continue
 
-        indexes = np.empty(num_pictures)
-        cont = 0
-        for ind in range(0,len(data)):
-            if data_labels[ind][fish] == 1:
-                indexes[cont] = ind
-                cont+=1
+        indexes = np.where(data_labels[:,fish]==1)[0] #np.zeros(num_pictures)
+        #cont = 0
+        #for ind in range(0,len(data)):
+        #    if data_labels[ind][fish] == 1:
+        #        indexes[cont] = ind
+        #        cont+=1
 
+        print('get pictures')
         # Get pictures
-        class_pictures = np.empty([num_pictures,img_height, img_width, 3])
-        cont1 = 0
-        cont2 = 0
-        for label in data_labels:
-            if label[fish] == 1:
-                class_pictures[cont1] = data[cont2]
-                cont1+=1
-            cont2+=1
-
+        class_pictures = data[indexes.tolist()] #np.zeros([num_pictures,img_height, img_width, 3])
+        #cont1 = 0
+        #for ind, label in enumerate(data_labels):
+        #    if label[fish] == 1:
+        #        class_pictures[cont1] = data[ind]
+        #        cont1+=1
+    
+        print('get features')
         # Get features
-        preprocessed_images = np.vstack([preprocess_image(fn) for fn in class_pictures])
-        vgg_features = model.predict(preprocessed_images)
-        vgg_features = vgg_features.reshape(len(data), -1)
-
+        #preprocessed_images = class_pictures #np.vstack([preprocess_image(fn) for fn in class_pictures])
+        vgg_features = model.predict(class_pictures)
+        print('reshape')
+        vgg_features = np.reshape(vgg_features,(len(class_pictures), -1))
+        print('cluster')
         # Cluster
-        km = KMeans(n_clusters = n_clusts, n_jobs = -1)
-        clust_preds = km.fit_predict(StandardScaler().fit_transform(vgg_features))
+        km = KMeans(n_clusters = n_clusts, n_jobs = -1, n_init=5, max_iter=100)
+        pca = PCA(n_components=1000)
+        clust_preds = km.fit_predict(pca.fit_transform(vgg_features))
 
         # Group all picture according to their cluster
         tmp = dict(zip(indexes, clust_preds))
         inst = {}
         for k, v in tmp.items():
             inst.setdefault(v, []).append(k)
-
+        print('build clusters')
         # For each cluster
         for i in range(0, n_clusts):
             instances = inst[i]

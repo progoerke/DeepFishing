@@ -118,6 +118,33 @@ def scale_crop(img,target_x, target_y):
     
     return crop_around(img1,target_x,target_y)[0]
     
+def smart_scale(img, x, y):
+    ''' Places the whole image in a new [x,y] image, fills margins with black.
+    note: x and y are image pixel sizes, not matrix coordinates, so y=height, x=width.
+    
+    @args
+    -img: [m,n,3] image file
+    -traget_x,target_y: Shape of the target image
+    '''
+    
+    black = np.zeros(img.shape)
+    
+    ari = img.shape[1]/img.shape[0]
+    art = target_x/target_y
+    
+    if (float(ari)/art)>1:
+        img1,_,_ = scale_fish(img,target_x,int(int(img.shape[0])*target_x/int(img.shape[1])))
+    else:
+        img1,_,_ = scale_fish(img,int(int(img.shape[1])*target_y/int(img.shape[0])),target_y)
+    
+    black[::img1.shape[0],::img1.shape[1],:] = img1[:,:,:]
+    
+    return np.roll(np.roll(black,int((black.shape[0]-img1.shape[0])/2)axis = 0),int((black.shape[1]-img1.shape[1])/2)axis = 1)
+
+    
+    
+    
+    
     
     
     

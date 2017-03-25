@@ -9,12 +9,10 @@ import os
 import glob
 import math
 import time
+import cv2
 
 from heatmap_VisCAM import Heatmap
 from imgloader import load_single_img
-
-
-from scipy.misc import imread, imresize
 
 def load_test(use_chached=True,filepath='test_mat.hdf5',crop_rows=400,crop_cols=400,no=1000,use_heatmap=False):
     directories = "data/test_stg1"               #location of 'train'
@@ -49,35 +47,39 @@ def load_test(use_chached=True,filepath='test_mat.hdf5',crop_rows=400,crop_cols=
                     _,max_idx,_ = h.heatmap(current_img)
                     center_row = max_idx[0]
                     center_col = max_idx[1]
-                # Get from heatmap/box
+                    # Get from heatmap/box
+
+                    start_crop_row = int(center_row - crop_rows/2)
+                    if start_crop_row < 0:
+                        start_crop_row = 0
+                    stop_crop_row = int(start_crop_row + crop_rows)
+                    if stop_crop_row > current_img.shape[0]:
+                        stop_crop_row = current_img.shape[0]
+                        start_crop_row = stop_crop_row - crop_rows
+                    start_crop_col = int(center_row - crop_cols/2)
+                    if start_crop_col < 0:
+                        start_crop_col = 0
+                    stop_crop_col = int(start_crop_col + crop_cols)
+                    if stop_crop_col > current_img.shape[1]:
+                        stop_crop_col = current_img.shape[1]
+                        start_crop_col = stop_crop_col - crop_cols
+
+                    current_img = current_img[start_crop_row:stop_crop_row,start_crop_col:stop_crop_col,:]
+                    crop_idx[total,0] = start_crop_row
+                    crop_idx[total,1] = stop_crop_row
+                    crop_idx[total,2] = start_crop_col
+                    crop_idx[total,3] = stop_crop_col
+                    crop_idx[total,4] = center_row
+                    crop_idx[total,5] = center_col
+
                 else:
-                    center_row = 250
-                    center_col = 500
+                    current_img = current_img.astype('float32')
+                    current_img /= 255
+                    current_img = cv2.resize(current_img, (crop_cols, crop_rows))
+                    crop_idx[total,:] = np.array([-1,-1,-1,-1,-1,-1])
 
-                start_crop_row = int(center_row - crop_rows/2)
-                if start_crop_row < 0:
-                    start_crop_row = 0
-                stop_crop_row = int(start_crop_row + crop_rows)
-                if stop_crop_row > current_img.shape[0]:
-                    stop_crop_row = current_img.shape[0]
-                    start_crop_row = stop_crop_row - crop_rows
-                start_crop_col = int(center_row - crop_cols/2)
-                if start_crop_col < 0:
-                    start_crop_col = 0
-                stop_crop_col = int(start_crop_col + crop_cols)
-                if stop_crop_col > current_img.shape[1]:
-                    stop_crop_col = current_img.shape[1]
-                    start_crop_col = stop_crop_col - crop_cols
-
-                current_img = current_img[start_crop_row:stop_crop_row,start_crop_col:stop_crop_col,:]
                 images[total, :, :, :] = current_img
                 ids[total] = directories+"/"+f
-                crop_idx[total,0] = start_crop_row
-                crop_idx[total,1] = stop_crop_row
-                crop_idx[total,2] = start_crop_col
-                crop_idx[total,3] = stop_crop_col
-                crop_idx[total,4] = center_row
-                crop_idx[total,5] = center_col
 
                 total += 1
         file.flush()
@@ -133,36 +135,40 @@ def load_train(use_chached=True,filepath='train_mat.hdf5',crop_rows=400,crop_col
                         center_row = max_idx[0]
                         center_col = max_idx[1]
                     # Get from heatmap/box
+
+                        start_crop_row = int(center_row - crop_rows/2)
+                        if start_crop_row < 0:
+                            start_crop_row = 0
+                        stop_crop_row = int(start_crop_row + crop_rows)
+                        if stop_crop_row > current_img.shape[0]:
+                            stop_crop_row = current_img.shape[0]
+                            start_crop_row = stop_crop_row - crop_rows
+                        start_crop_col = int(center_col - crop_cols/2)
+                        if start_crop_col < 0:
+                            start_crop_col = 0
+                        stop_crop_col = int(start_crop_col + crop_cols)
+                        if stop_crop_col > current_img.shape[1]:
+                            stop_crop_col = current_img.shape[1]
+                            start_crop_col = stop_crop_col - crop_cols
+
+                        crop_idx[total,0] = start_crop_row
+                        crop_idx[total,1] = stop_crop_row
+                        crop_idx[total,2] = start_crop_col
+                        crop_idx[total,3] = stop_crop_col
+                        crop_idx[total,4] = center_row
+                        crop_idx[total,5] = center_col
+
+                        current_img = current_img.astype('float32')
+                        current_img /= 255
+
+                        current_img = current_img[start_crop_row:stop_crop_row,start_crop_col:stop_crop_col,:]
+
                     else:
-                        center_row = 250
-                        center_col = 500
+                        current_img = current_img.astype('float32')
+                        current_img /= 255
+                        current_img = cv2.resize(current_img, (crop_cols, crop_rows))
+                        crop_idx[total,:] = np.array([-1,-1,-1,-1,-1,-1])
 
-                    start_crop_row = int(center_row - crop_rows/2)
-                    if start_crop_row < 0:
-                        start_crop_row = 0
-                    stop_crop_row = int(start_crop_row + crop_rows)
-                    if stop_crop_row > current_img.shape[0]:
-                        stop_crop_row = current_img.shape[0]
-                        start_crop_row = stop_crop_row - crop_rows
-                    start_crop_col = int(center_col - crop_cols/2)
-                    if start_crop_col < 0:
-                        start_crop_col = 0
-                    stop_crop_col = int(start_crop_col + crop_cols)
-                    if stop_crop_col > current_img.shape[1]:
-                        stop_crop_col = current_img.shape[1]
-                        start_crop_col = stop_crop_col - crop_cols
-
-                    crop_idx[total,0] = start_crop_row
-                    crop_idx[total,1] = stop_crop_row
-                    crop_idx[total,2] = start_crop_col
-                    crop_idx[total,3] = stop_crop_col
-                    crop_idx[total,4] = center_row
-                    crop_idx[total,5] = center_col
-
-                    current_img = current_img.astype('float32')
-                    current_img /= 255
-
-                    current_img = current_img[start_crop_row:stop_crop_row,start_crop_col:stop_crop_col,:]
                     images[total, :, :, :] = current_img
                     targets[total, :] = 0
                     targets[total, i] = 1
@@ -224,7 +230,8 @@ def load_max_idx():
     
     sys.stdout.write('\n Doooone :)\n')
 
-load_train(use_chached=False, use_heatmap = True,no=80)
+#load_train(filepath='just_test.hdf5',use_chached=False, use_heatmap = False,no=80)
+#load_test(filepath='just_test2.hdf5',use_chached=False, use_heatmap = False,no=80)
 #load_max_idx()
 
 # start = time.time()

@@ -6,7 +6,7 @@ import cv2
 import scipy.misc
 
 print('load from hdf5 file')
-file = h5py.File('my_train_mat.hdf5', "r")
+file = h5py.File('just_test.hdf5', "r")
 
 images = file["images"]
 ids = file["ids"]
@@ -21,4 +21,4 @@ for i,img in enumerate(images):
 	print(name)
 	fname = ('').join((name[2],name[3]))
 	print(fname)
-	scipy.misc.toimage(img, cmin=0.0, cmax=...).save('data/cropped/'+fname)
+	scipy.misc.toimage(img, cmin=0.0, cmax=...).save('data/resized/'+fname)

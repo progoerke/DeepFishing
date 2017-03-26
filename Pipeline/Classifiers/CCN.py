@@ -5,12 +5,15 @@ from keras.utils import np_utils
 from keras import backend as K
 from keras.callbacks import EarlyStopping
 
+
+from Classifiers.classifier_base import Classifier_base
+
 from hyperopt import hp
 
-class CCN():
+class CCN(Classifier_base):
 
     space = (
-        hp.choice('batch_size', [8,16,32,64,128]),
+        hp.choice('batch_size', [8,16,32,64]),
         hp.choice('nb_filters', [16, 32, 64]),
         hp.choice('pool_size', [(2,2), (3,3), (4,4)]),
         hp.choice('kernel_size', [(3,3), (4,4), (5,5)]),
@@ -50,17 +53,17 @@ class CCN():
 
         return model
 
-    def fit(self, X_train, Y_train, X_val, Y_val):
+    def fit(self, train_generator, validation_generator, split):
 
-        early = EarlyStopping(monitor='val_loss', min_delta=0, patience=3, verbose=0, mode='auto')
+        early = EarlyStopping(monitor='val_loss', min_delta=0, patience=5, verbose=0, mode='auto')
 
-        self.model.fit(X_train, Y_train, validation_data=(X_val, Y_val), callbacks=[early], batch_size = self.batch_size, nb_epoch = self.nb_epoch, verbose = 1)
+        self.model.fit_generator(train_generator, steps_per_epoch=split[0]/self.batch_size, validation_data=validation_generator, validation_steps=split[1]/self.batch_size, callbacks=[early], epochs = self.nb_epoch, verbose = 1, class_weight = 'auto')
 
     def predict(self, X_test):
         return self.model.predict_proba(X_test, batch_size = self.batch_size, verbose = 1)
 
-    def evaluate(self, X_val, Y_val):
+    def evaluate(self, validation_generator):
         
-        score = self.model.evaluate(X_val, Y_val)    
+        score = self.model.evaluate_generator(validation_generator)    
         return score[0]
 

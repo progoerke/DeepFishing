@@ -17,6 +17,7 @@ import dataloader
 import VGG_CV as CV
 
 from keras.models import load_model
+from keras.preprocessing.image import ImageDataGenerator
 
 #Insert your class here
 from Classifiers.CCN import CCN
@@ -55,12 +56,34 @@ def train_generator(data, labels, train_indx, batch_size):
 
     np.random.shuffle(train_indx)
     start = 0
+    prob_8 = len(labels)-np.sum(labels, axis=0)
+    prob_all = []
+    for i in train_indx:
+        prob_all.append(prob_8[labels[i]])
+    prob_all = np.array(prob_all)
+    prob_all = prob_all/np.sum(prob_all)
     while True:
-        indx = train_indx[start:start+batch_size]
-        start += batch_size
-        start %= len(train_indx)
+        sampled_indx = np.random.choice(tain_indx,size=1000,p=prob_all)
+        
+        d = data[sampled_indx]
+        l = labels[sampled_indx]
 
-        yield (data[indx], labels[indx])                
+        datagen = ImageDataGenerator(
+            zca_whitening=True,
+            featurewise_std_normalization=True,
+            rotation_range=45,
+            horizontal_flip=False,
+            vertical_flip=False,
+            horizontal_flip=True)
+
+        datagen.fit(d)
+
+        cnt = 0
+        for X_batch, Y_batch in datagen.flow(d,l, batch_size=batch_size):
+            yield (X_batch, Y_batch)
+            if cnt == 1500:
+                break
+            cnt+=batch_size              
 
 def val_generator(data, labels, val_indx, batch_size):
     

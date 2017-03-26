@@ -13,6 +13,7 @@ Pipeline/data/train_smaller
 
 *.h5py
 *.hdf5
+*.h5
 
 *.pyc
 **/*.pyc

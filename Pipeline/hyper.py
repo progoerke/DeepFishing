@@ -31,10 +31,10 @@ def data(load=False, use_cached=True, use_heatmap=True):
     
     cval_splits = 5
 
-    data, labels, _, _ = dataloader.load_train(use_chached=True, use_heatmap=True)
+    data, labels, _, _ = dataloader.load_train(filepath='/work/kstandvoss/train_mat.hdf5',use_chached=use_cached, use_heatmap=use_heatmap)
     print('loaded images')
     print('start cross validation')
-    cval_indx = CV.VGG_CV(data, labels, folds=cval_splits, use_cached=True)
+    cval_indx = CV.VGG_CV(data, labels, folds=cval_splits, use_cached=use_cached)
     print('finished cross validation')
     indx = [np.where(cval_indx==ind) for ind in np.unique(cval_indx)]
     
@@ -77,14 +77,17 @@ def val_generator(data, labels, val_indx, batch_size):
 Wrapper function to run model training and evaluation
 @params - model parameters to optimize
 '''
-def run_model(params):  
+def run_model(params=None, m=None):  
 
     global best
     global model
 
     print(params)
     #classifier = CCN((data[0].shape[0], data[0].shape[1]),8,15,*params)
-    classifier = Inception((data[0].shape[0], data[0].shape[1]),8,50,*params)
+    if params:
+        classifier = Inception((data[0].shape[0], data[0].shape[1]),8,50,*params)
+    else:
+        classifier = m
 
     classifier.create_class_weight(dict(enumerate(np.sum(labels,0))))
 
@@ -137,7 +140,7 @@ if __name__ == '__main__':
     
 
     if sys.argv[1] == '-o':
-        data, labels, train_indx, val_indx = data(True)
+        data, labels, train_indx, val_indx = data(True, False, False)
         max_evals = int(sys.argv[2])
         optimize(max_evals)
     elif sys.argv[1] == '-r':
@@ -145,14 +148,16 @@ if __name__ == '__main__':
         run_model(params)        
     else:
         name = sys.argv[1]
+        data, labels, train_indx, val_indx = data(True, True, False)
         params = pickle.load(open('models/{}.pkl'.format(name),'rb'))
-        model = Inception((data[0].shape[0], data[0].shape[1]),8,50,*params)
+        model = Inception((data[0].shape[0], data[0].shape[1]),8,100,lr=params['lr'],batch_size=64, optimizer='sgd')
         model.model.load_weights('models/{}.h5'.format(name))
         model.model.compile(loss='categorical_crossentropy',
                       optimizer=model.optimizer,
                       metrics=["accuracy"])
+        run_model(m=model)
     
-    test, filenames, _ = dataloader.load_test(use_chached=True, use_heatmap=True)
+    test, filenames, _ = dataloader.load_test(filepath='/work/kstandvoss/test_mat.hdf5', use_chached=True, use_heatmap=False)
     print(filenames) 
     preds = model.predict(test)
     write_submission(preds, filenames)

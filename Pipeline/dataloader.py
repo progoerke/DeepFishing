@@ -98,7 +98,7 @@ def load_test(use_chached=True,filepath='test_mat.hdf5',crop_rows=400,crop_cols=
 def load_train(use_chached=True,filepath='train_mat.hdf5',crop_rows=400,crop_cols=400,no=3777,use_heatmap=False):
     fish = ['ALB','BET','DOL','LAG','NoF','OTHER','SHARK','YFT']
     #fish = ['BET']
-    directories = "data/train_smaller"               #location of 'train'
+    directories = "data/train"               #location of 'train'
     #subdirs = listdir(directories)[1::]
     #print(subdirs)
 

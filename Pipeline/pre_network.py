@@ -71,14 +71,22 @@ class Pre_Network:
             
         ## create the output shape, the output image is made a bit bigger to allow the stitched versions to be added. 
         ## the extra parts will be cut off at the end
-        output = np.zeros([im.shape[0]+2*stride, im.shape[0]+2*stride])
-        
+        output = np.zeros([im.shape[0]+122, im.shape[0]+122])
         # the input image has to be padded with zeros to allow shifting of the image. 
         # pad input image (half filter size + stride)
-        im_padded = np.pad(im, ((patch_size//2, patch_size + stride),
-                                (patch_size//2, patch_size + stride)), 'constant', constant_values = [0,0])    
-        im_p_sh = im_padded.shape
+        #im_padded = np.pad(im, ((patch_size//2, patch_size + stride),
+        #                        (patch_size//2, patch_size + stride)), 'constant', constant_values = [0,0])    
         
+        im_padded = np.zeros((im.shape[0]+122,im.shape[1]+122,im.shape[2]))
+
+        im_padded[:,:,0] = np.pad(im[:,:,0], ((patch_size//2, patch_size + stride),
+            (patch_size//2, patch_size + stride)), 'constant', constant_values = [0,0])
+        im_padded[:,:,1] = np.pad(im[:,:,1], ((patch_size//2,patch_size + stride),
+            (patch_size//2, patch_size + stride)), 'constant', constant_values = [0,0])
+        im_padded[:,:,2] = np.pad(im[:,:,2], ((patch_size//2, patch_size + stride),
+            (patch_size//2, patch_size + stride)), 'constant', constant_values = [0,0])
+
+        im_p_sh = im_padded.shape
         
         # Now implement a loop that:
         # - obtains a shifted version of the image
@@ -86,28 +94,34 @@ class Pre_Network:
         # - and places the network output in the output of this function
             
         for row in range(0, stride):
-            for col in range(0, stride):   
+            for col in range(0, stride):
+                sys.stdout.write(".")
+                sys.stdout.flush()   
                         
                 shifted_im = np.roll(im_padded, -row, axis=0)            
                 shifted_im = np.roll(shifted_im, -col, axis=1)
                 
                 # forward pass
                 probability = self.get99(shifted_im)
-                
-                print(probability.shape)
                 for i in range(probability.shape[0]):
                     for j in range(probability.shape[1]):
-                        output[row+i*stride,col+j*stride] = probability[i,j]
+                        output[row+i*stride,col+j*stride] = probability[i,j,1]
         
         return output[0:im.shape[0], 0:im.shape[1]]
 
-    def get99(self,full_img):
-        im_padded = np.pad(full_img, ((patch_size//2, patch_size//2),
-                                (patch_size//2, patch_size//2)), 'constant', constant_values = [0,0])
+    def get99(self,full_img,patch_size=49):
+        im_padded = np.zeros((full_img.shape[0]+48,full_img.shape[1]+48,full_img.shape[2]))
+        im_padded[:,:,0] = np.pad(full_img[:,:,0], ((patch_size//2, patch_size//2),
+                            (patch_size//2, patch_size//2)), 'constant', constant_values = [0,0])
+        im_padded[:,:,1] = np.pad(full_img[:,:,1], ((patch_size//2, patch_size//2),
+                            (patch_size//2, patch_size//2)), 'constant', constant_values = [0,0])
+        im_padded[:,:,2] = np.pad(full_img[:,:,2], ((patch_size//2, patch_size//2),
+                            (patch_size//2, patch_size//2)), 'constant', constant_values = [0,0])
         output = np.zeros((9,9,2))
         for i in range(9):
             for j in range(9):
-                output[i,j,:] = self.new_model.predict(im_padded[i*49:i*49+49,j*49:j*49+49,:],verbose=0)
+                x = np.expand_dims(im_padded[i*49:i*49+49,j*49:j*49+49,:], axis=0)
+                output[i,j,:] = self.new_model.predict(x,verbose=0)
         
         return output
         
@@ -120,14 +134,20 @@ class Pre_Network:
         file = h5py.File(filepath_train, "w")
         no_chunks = 2
         dt = h5py.special_dtype(vlen=bytes)
-        
-        output = file.create_dataset("probas", (3777, img_height, img_width, 3), chunks=(no_chunks, img_height, img_width, 3), dtype='f', compression="lzf")
-        ids = file.create_dataset("ids", (3777,1), chunks=(no_chunks,1), dtype=dt)
+
+        #3777
+        output = file.create_dataset("probas", (5, self.img_height, self.img_width, 3), chunks=(no_chunks, self.img_height, self.img_width, 3), dtype='f', compression="lzf")
+        ids = file.create_dataset("ids", (5,1), chunks=(no_chunks,1), dtype=dt)
         total = 0
         for idx,img in enumerate(self.train_images):
             output[total,:,:,:] = self.shift_and_stitch(img,49,49)
             ids[total,:] = self.ids[idx]
             total += 1
+            if idx%300==0:
+                sys.stdout.write(".")
+                sys.stdout.flush()
+            if idx ==0:
+                break
         file.flush()
         file.close()
 
@@ -136,13 +156,19 @@ class Pre_Network:
         no_chunks = 2
         dt = h5py.special_dtype(vlen=bytes)
         
-        output_test = file.create_dataset("probas", (1000, img_height, img_width, 3), chunks=(no_chunks, img_height, img_width, 3), dtype='f', compression="lzf")
-        ids_test = file.create_dataset("ids", (1000,1), chunks=(no_chunks,1), dtype=dt)
+        #1000
+        output_test = file.create_dataset("probas", (5, img_height, img_width, 3), chunks=(no_chunks, img_height, img_width, 3), dtype='f', compression="lzf")
+        ids_test = file.create_dataset("ids", (5,1), chunks=(no_chunks,1), dtype=dt)
         total = 0
         for idx,img in enumerate(self.test_images):
             output_test[total,:,:,:] = self.shift_and_stitch(img,49,49)
             ids_test[total,:] = self.ids[idx]
             total += 1
+            if idx%100==0:
+                sys.stdout.write(".")
+                sys.stdout.flush()    
+            if idx == 0:
+                break
         file.flush()
         file.close()
 
@@ -157,8 +183,10 @@ class Pre_Network:
         print("Loaded model from disk")
 
     def extract_patches(self,patch_size=49,stride=49):
-        patches = np.zeros((self.train_images.shape[0]*9*9,49,49,3))
-        labels = np.zeros((self.train_images.shape[0]*9*9,1,1,2))
+        #patches = np.zeros((self.train_images.shape[0]*9*9,49,49,3))
+        #labels = np.zeros((self.train_images.shape[0]*9*9,1,1,2))
+        patches = np.zeros((3*9*9,49,49,3))
+        labels = np.zeros((3*9*9,1,1,2))
         total = 0
         for idx,im in enumerate(self.train_images):
             #im_padded = np.pad(im, ((49//2, 49 //2,0),(49//2, 49//2,0)), 'constant', constant_values = [0,0,0])
@@ -180,6 +208,8 @@ class Pre_Network:
             if total%300==0:
                 sys.stdout.write(".")
                 sys.stdout.flush()
+            if idx == 2:
+                break
         return patches, labels    
 
     def train_model(self,model_name='new_model'):

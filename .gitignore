@@ -4,7 +4,7 @@ data/smaller_train
 data/test_stg1
 data/sample_submission_stg1.csv
 
-Pipeline/bb_data
+
 Pipeline/data/train
 Pipeline/data/cropped
 Pipeline/data/resized

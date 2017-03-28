@@ -22,7 +22,7 @@ from keras.preprocessing.image import ImageDataGenerator
 #Insert your class here
 from Classifiers.CCN import CCN
 from Classifiers.inceptionV3 import Inception
-
+from keras.optimizers import SGD
 
 '''
 Load data and split into partitions for cross validation
@@ -57,40 +57,55 @@ def train_generator(data, labels, train_indx, batch_size):
     np.random.shuffle(train_indx)
     start = 0
     prob_8 = len(labels)-np.sum(labels, axis=0)
-    prob_all = []
-    for i in train_indx:
-        prob_all.append(prob_8[labels[i]])
-    prob_all = np.array(prob_all)
+    prob_all = np.zeros(len(train_indx))
+    for ind,i in enumerate(train_indx):
+        prob_all[ind] = prob_8[labels[i]==1]
+    
     prob_all = prob_all/np.sum(prob_all)
-    while True:
-        sampled_indx = np.random.choice(tain_indx,size=1000,p=prob_all)
-        
-        d = data[sampled_indx]
-        l = labels[sampled_indx]
+    
+    datagen = ImageDataGenerator(
+            rotation_range=15,
+            width_shift_range=0.2,
+            height_shift_range=0.2,
+            shear_range=0.2,
+            zoom_range=0.2,
+            horizontal_flip=True,
+            fill_mode='nearest')
 
-        datagen = ImageDataGenerator(
-            zca_whitening=True,
-            featurewise_std_normalization=True,
-            rotation_range=45,
-            horizontal_flip=False,
-            vertical_flip=False,
-            horizontal_flip=True)
+    num = batch_size * 10 
+    while True:
+        sampled_indx = np.random.choice(train_indx,size=num, p=prob_all)
+        d = []
+        l = []
+
+        for i in sampled_indx:
+            d.append(data[i])
+            l.append(labels[i])
+        d = np.array(d)
+        l = np.array(l)
 
         datagen.fit(d)
 
         cnt = 0
         for X_batch, Y_batch in datagen.flow(d,l, batch_size=batch_size):
-            yield (X_batch, Y_batch)
-            if cnt == 1500:
+            weight = np.sum(Y_batch,axis=0) + 1
+            weight = np.clip(np.log(np.sum(weight)/weight),1,5)
+            weight = np.tile(weight, (len(Y_batch),1))[Y_batch==1] 
+            yield (X_batch, Y_batch, weight)
+            cnt+=batch_size   
+            if cnt == num:
                 break
-            cnt+=batch_size              
+                 
 
 def val_generator(data, labels, val_indx, batch_size):
     
     np.random.shuffle(val_indx)
+    data = data[val_indx]
+    labels = labels[val_indx]
+
     start = 0
     while True:
-        indx = train_indx[start:start+batch_size]
+        indx = val_indx[start:start+batch_size]
         start += batch_size 
         start %= len(val_indx)
 
@@ -112,12 +127,22 @@ def run_model(params=None, m=None):
     else:
         classifier = m
 
-    classifier.create_class_weight(dict(enumerate(np.sum(labels,0))))
+    #classifier.create_class_weight(dict(enumerate(np.sum(labels,0))))
 
     tg = train_generator(data, labels, train_indx, classifier.batch_size)
     vg = train_generator(data, labels, val_indx, classifier.batch_size)
 
     classifier.fit(tg, vg, (len(train_indx), len(val_indx)))
+
+    for layer in classifier.model.layers[:172]:
+            layer.trainable = False
+    for layer in classifier.model.layers[172:]:
+            layer.trainable = True
+
+    classifier.model.compile(optimizer=SGD(lr=0.0001, momentum=0.9), loss='categorical_crossentropy')        
+    
+    classifier.fit(tg, vg, (len(train_indx), len(val_indx)))
+
     loss = classifier.evaluate(vg, len(val_indx))
 
     if loss < best:
@@ -155,6 +180,7 @@ def optimize(max_evals):
 
 if __name__ == '__main__':
 
+    np.random.seed(42)
 
     global best
     global model
@@ -163,18 +189,24 @@ if __name__ == '__main__':
     
 
     if sys.argv[1] == '-o':
-        data, labels, train_indx, val_indx = data(True, False, False)
+        data, labels, train_indx, val_indx = data(True, True, False)
         max_evals = int(sys.argv[2])
         optimize(max_evals)
     elif sys.argv[1] == '-r':
-        data, labels, train_indx, val_indx = data(False)
-        run_model(params)        
+        data, labels, train_indx, val_indx = data(True, True, False)
+        params = pickle.load(open('models/{}.pkl'.format('inception_loss-0.3928944135109009'),'rb'))
+        run_model((params['lr'],64,'sgd'))        
     else:
         name = sys.argv[1]
         data, labels, train_indx, val_indx = data(True, True, False)
         params = pickle.load(open('models/{}.pkl'.format(name),'rb'))
-        model = Inception((data[0].shape[0], data[0].shape[1]),8,100,lr=params['lr'],batch_size=64, optimizer='sgd')
+        model = Inception((data[0].shape[0], data[0].shape[1]),8,100,lr=1e-4,batch_size=64, optimizer='sgd')
         model.model.load_weights('models/{}.h5'.format(name))
+
+        for layer in model.model.layers[:236]:
+            layer.trainable = False
+        for layer in model.model.layers[236:]:
+            layer.trainable = True
         model.model.compile(loss='categorical_crossentropy',
                       optimizer=model.optimizer,
                       metrics=["accuracy"])

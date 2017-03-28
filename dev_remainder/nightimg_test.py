@@ -50,11 +50,11 @@ def get_histogram_matching_lut(one_channel, day_img, n_bins, plot_me=False):
     
     return equalized_channels
 
-dayimg = load_single_img('data/train/ALB/img_00003.jpg',convert_bgr=True)
+dayimg = load_single_img('../../../../train/ALB/img_00003.jpg',convert_bgr=True)
 print(dayimg.shape)
 dayimg = np.transpose(dayimg, (2,0,1))
 print(dayimg.dtype)
-nightimg = load_single_img('data/train/ALB/img_00019.jpg',convert_bgr=True)
+nightimg = load_single_img('../../../../train/ALB/img_00019.jpg',convert_bgr=True)
 print(nightimg.shape)
 nightimg = np.transpose(nightimg, (2,0,1))
 print(nightimg.dtype)

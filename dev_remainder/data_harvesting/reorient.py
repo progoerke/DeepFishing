@@ -131,7 +131,7 @@ def orient_fish(img,tx,ty, m = None):
     return heatmap_rotated,image_cropped, heatmap_cropped, image_cropped1
 
 
-img = load_single_img("../../../../train/BET/img_01725.jpg",convert_bgr=True)
+img = load_single_img("../../../../train/BET/img_00883.jpg",convert_bgr=True)
 hr,ir, hc, ic = orient_fish(img,350,350)
 cv2.imshow('orig',ic)
 cv2.imshow('orig',ir)

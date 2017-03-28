@@ -14,13 +14,13 @@ import cv2
 from heatmap_VisCAM import Heatmap
 from imgloader import load_single_img
 
-def load_test(use_chached=True,filepath='test_mat.hdf5',crop_rows=400,crop_cols=400,no=1000,use_heatmap=False):
+def load_test(use_cached=True,filepath='test_mat.hdf5',crop_rows=400,crop_cols=400,no=1000,use_heatmap=False):
     directories = "data/test_stg1"               #location of 'train'
     #subdirs = listdir(directories)[1::]
     #print(subdirs)
 
     num_total_images = no
-    if use_chached is False:
+    if use_cached is False:
         print('create new hdf5 file')
         file = h5py.File(filepath, "w")
         no_chunks = 2
@@ -95,7 +95,7 @@ def load_test(use_chached=True,filepath='test_mat.hdf5',crop_rows=400,crop_cols=
     sys.stdout.write('\n Doooone :)\n')
     return images, ids, crop_idx
 
-def load_train(use_chached=True,filepath='train_mat.hdf5',crop_rows=400,crop_cols=400,no=3777,use_heatmap=False):
+def load_train(use_cached=True,filepath='train_mat.hdf5',crop_rows=400,crop_cols=400,no=3777,use_heatmap=False):
     fish = ['ALB','BET','DOL','LAG','NoF','OTHER','SHARK','YFT']
     #fish = ['BET']
     directories = "data/train"               #location of 'train'
@@ -103,7 +103,7 @@ def load_train(use_chached=True,filepath='train_mat.hdf5',crop_rows=400,crop_col
     #print(subdirs)
 
     num_total_images = no
-    if use_chached is False:
+    if use_cached is False:
         print('create new hdf5 file')
         file = h5py.File(filepath, "w")
         #no_chunks = 64
@@ -126,7 +126,7 @@ def load_train(use_chached=True,filepath='train_mat.hdf5',crop_rows=400,crop_col
             #print(f)
                 if not(f == '.DS_Store'):
                     current_img = load_single_img(directories+"/"+d+"/"+f,convert_bgr=True)
-                    print(directories+"/"+d+"/"+f)
+                    #print(directories+"/"+d+"/"+f)
                     #print(current_img.shape)
 
                     if use_heatmap:
@@ -230,18 +230,19 @@ def load_max_idx():
     
     sys.stdout.write('\n Doooone :)\n')
 
-#load_train(filepath='just_test.hdf5',use_chached=False, use_heatmap = False,no=80)
-#load_test(filepath='just_test2.hdf5',use_chached=False, use_heatmap = False,no=80)
+#load_train(filepath='just_test.hdf5',use_cached=False, use_heatmap = False,no=80)
+#load_test(filepath='just_test2.hdf5',use_cached=False, use_heatmap = False,no=80)
 #load_max_idx()
+load_train(use_cached=False)
 
 # start = time.time()
-# load_test(use_chached=False,crop_rows=200,crop_cols=200)
+# load_test(use_cached=False,crop_rows=200,crop_cols=200)
 # end = time.time()
 # print(end - start)
 ##626.100456237793
 ##548.030868053
 #start = time.time()
-#load_train(use_chached=False,filepath='train_mat_smaller.hdf5',crop_rows=400,crop_cols=400, use_heatmap=True)
+#load_train(use_cached=False,filepath='train_mat_smaller.hdf5',crop_rows=400,crop_cols=400, use_heatmap=True)
 #end = time.time()
 #print(end - start)
 #plt.imshow([[1,0],[0,1]])

@@ -32,7 +32,7 @@ def data(load=False, use_cached=True, use_heatmap=True):
     
     cval_splits = 5
 
-    data, labels, _, _ = dataloader.load_train(filepath='/work/kstandvoss/train_mat.hdf5',use_chached=use_cached, use_heatmap=use_heatmap)
+    data, labels, _, _ = dataloader.load_train(filepath='/work/kstandvoss/train_mat.hdf5',use_cached=use_cached, use_heatmap=use_heatmap)
     print('loaded images')
     print('start cross validation')
     cval_indx = CV.VGG_CV(data, labels, folds=cval_splits, use_cached=use_cached)
@@ -72,7 +72,7 @@ def train_generator(data, labels, train_indx, batch_size):
             horizontal_flip=True,
             fill_mode='nearest')
 
-    num = batch_size * 10 
+    num = 500 
     while True:
         sampled_indx = np.random.choice(train_indx,size=num, p=prob_all)
         d = []
@@ -100,8 +100,6 @@ def train_generator(data, labels, train_indx, batch_size):
 def val_generator(data, labels, val_indx, batch_size):
     
     np.random.shuffle(val_indx)
-    data = data[val_indx]
-    labels = labels[val_indx]
 
     start = 0
     while True:
@@ -109,7 +107,7 @@ def val_generator(data, labels, val_indx, batch_size):
         start += batch_size 
         start %= len(val_indx)
 
-        yield (data[indx], labels[indx])
+        yield (data[indx.sort()], labels[indx.sort()])
 
 '''
 Wrapper function to run model training and evaluation
@@ -134,14 +132,14 @@ def run_model(params=None, m=None):
 
     classifier.fit(tg, vg, (len(train_indx), len(val_indx)))
 
-    for layer in classifier.model.layers[:172]:
-            layer.trainable = False
-    for layer in classifier.model.layers[172:]:
-            layer.trainable = True
+    #for layer in classifier.model.layers[:172]:
+    #        layer.trainable = False
+    #for layer in classifier.model.layers[172:]:
+    #        layer.trainable = True
 
-    classifier.model.compile(optimizer=SGD(lr=0.0001, momentum=0.9), loss='categorical_crossentropy')        
+    #classifier.model.compile(optimizer=SGD(lr=0.0001, momentum=0.9), loss='categorical_crossentropy',metrics=['accuracy'])        
     
-    classifier.fit(tg, vg, (len(train_indx), len(val_indx)))
+    #classifier.fit(tg, vg, (len(train_indx), len(val_indx)))
 
     loss = classifier.evaluate(vg, len(val_indx))
 
@@ -189,11 +187,11 @@ if __name__ == '__main__':
     
 
     if sys.argv[1] == '-o':
-        data, labels, train_indx, val_indx = data(True, True, False)
+        data, labels, train_indx, val_indx = data(False, False, False)
         max_evals = int(sys.argv[2])
         optimize(max_evals)
     elif sys.argv[1] == '-r':
-        data, labels, train_indx, val_indx = data(True, True, False)
+        data, labels, train_indx, val_indx = data(False, True, False)
         params = pickle.load(open('models/{}.pkl'.format('inception_loss-0.3928944135109009'),'rb'))
         run_model((params['lr'],64,'sgd'))        
     else:

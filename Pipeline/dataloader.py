@@ -231,9 +231,9 @@ def load_max_idx():
     sys.stdout.write('\n Doooone :)\n')
 
 #load_train(filepath='just_test.hdf5',use_cached=False, use_heatmap = False,no=80)
-#load_test(filepath='just_test2.hdf5',use_cached=False, use_heatmap = False,no=80)
+#load_test(filepath='/work/kstandvoss/test_mat.hdf5',use_cached=False, use_heatmap = False)
 #load_max_idx()
-load_train(use_cached=False)
+#load_train(use_cached=False)
 
 # start = time.time()
 # load_test(use_cached=False,crop_rows=200,crop_cols=200)

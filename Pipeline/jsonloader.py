@@ -97,3 +97,5 @@ def load_train(use_cached=True,filepath='bb_train_mat.hdf5',crop_rows = 400,crop
 
     sys.stdout.write('\n Doooone :)\n')
     return images, targets, masks, ids
+
+#load_train(use_cached=False, filepath='/work/kstandvoss/bb_train_mat.hdf5')

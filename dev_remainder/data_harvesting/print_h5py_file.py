@@ -32,20 +32,20 @@ def print_hdf5_item_structure(g, offset='    ') :
             print(offset, key)#,"   ", subg.name #, val, subg.len(), type(subg),
             print_hdf5_item_structure(subg, offset + '    ')
 
-no = 7
+no = 0
  
-hdf5_file_name = 'bb_train_mat.hdf5'
+hdf5_file_name = '/work/kstandvoss/sas_train_mat.hdf5'
 print_hdf5_file_structure(hdf5_file_name)
 file    = h5py.File(hdf5_file_name, 'r')   # 'r' means that hdf5 file is open in read-only mode
-dataset = file['images']
+dataset = file['probas']
 img = np.array(dataset[no])
 print(img.shape)
 print(img.dtype)
 print(np.min(img))
 print(np.max(img))
 cv2.imshow('yoo',img)
-datamsk = file['masks']
-img = np.array(datamsk[no])
+#datamsk = file['masks']
+#img = np.array(datamsk[no])
 print(img.dtype)
 print(np.min(img))
 print(np.max(img))

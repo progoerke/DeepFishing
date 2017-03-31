@@ -150,6 +150,12 @@ def run_model(params=None, m=None, data=None, labels=None, train_indx=None, val_
         model.save_weights('models/inception_loss-{}.h5'.format(best))
         print('new best: ', best, params)
 
+        # serialize model to JSON
+        model_json = model.to_json()
+        with open('model_json/inception_loss-{}.json'.format(best), "w") as json_file:
+            json_file.write(model_json)
+        print("Saved model to disk")
+
     return {'loss': loss, 'status': STATUS_OK}
 
 
@@ -174,8 +180,15 @@ def optimize(max_evals, data=None, labels=None, train_indx=None, val_indx=None):
     best_run = fmin(run, space, algo = tpe.suggest, max_evals = max_evals)
 
     print(best_run)
+
     pickle.dump(best_run, open('/work/kstandvoss/models/inception_loss-{}.pkl'.format(best), 'wb'))
     model.save_weights('/work/kstandvoss/models/inception_loss-{}.h5'.format(best))
+
+    # serialize model to JSON
+    model_json = model.to_json()
+    with open('model_json/inception_loss-{}.json'.format(best), "w") as json_file:
+        json_file.write(model_json)
+    print("Saved model to disk")
     
 
 if __name__ == '__main__':

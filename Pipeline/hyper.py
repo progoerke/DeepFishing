@@ -155,7 +155,7 @@ def run_model(params=None, m=None):
 
 def write_submission(predictions, filenames):
     preds = np.clip(predictions, 0.01, 1-0.01)
-    sub_fn = 'data/first' 
+    sub_fn = '/work/kstandvoss/data/first' 
     
     with open(sub_fn + '.csv', 'w') as f:
         print("Writing Predictions to CSV...")
@@ -172,8 +172,8 @@ def optimize(max_evals):
     best_run = fmin(run_model, space, algo = tpe.suggest, max_evals = max_evals)
 
     print(best_run)
-    pickle.dump(best_run, open('models/inception_loss-{}.pkl'.format(best), 'wb'))
-    model.save_weights('models/inception_loss-{}.h5'.format(best))
+    pickle.dump(best_run, open('/work/kstandvoss/models/inception_loss-{}.pkl'.format(best), 'wb'))
+    model.save_weights('/work/kstandvoss/models/inception_loss-{}.h5'.format(best))
     
 
 if __name__ == '__main__':
@@ -192,14 +192,14 @@ if __name__ == '__main__':
         optimize(max_evals)
     elif sys.argv[1] == '-r':
         data, labels, train_indx, val_indx = data(False, True, False)
-        params = pickle.load(open('models/{}.pkl'.format('inception_loss-0.3928944135109009'),'rb'))
+        params = pickle.load(open('/work/kstandvoss/models/{}.pkl'.format('inception_loss-0.3928944135109009'),'rb'))
         run_model((params['lr'],64,'sgd'))        
     else:
         name = sys.argv[1]
         data, labels, train_indx, val_indx = data(True, True, False)
-        params = pickle.load(open('models/{}.pkl'.format(name),'rb'))
+        params = pickle.load(open('/work/kstandvoss/models/{}.pkl'.format(name),'rb'))
         model = Inception((data[0].shape[0], data[0].shape[1]),8,100,lr=1e-4,batch_size=64, optimizer='sgd')
-        model.model.load_weights('models/{}.h5'.format(name))
+        model.model.load_weights('/work/kstandvoss/models/{}.h5'.format(name))
 
         for layer in model.model.layers[:236]:
             layer.trainable = False

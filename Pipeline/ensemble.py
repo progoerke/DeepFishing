@@ -42,26 +42,33 @@ def train_ensemble(modellist):
     model.fit(train, targets, nb_epoch=10, batch_size=10, callbacks_list= callbacks_list)
 
 
-def get_test_predictions(modellist):
+def get_test_predictions(modellist, mode='mean'):
     filenames = pickle.load(open('/work/kstandvoss/predictions/test_filenames.pkl','rb'))
-    test = np.zeros((len(modellist),3777,8))
+    test = np.zeros((len(modellist),1000,8))
     for i,m in enumerate(modellist):
         test[i,:,:] = pickle.load(open('/work/kstandvoss/predictions/test_{}.pkl'.format(m),'rb'))
-
     test = np.transpose(train,(1,0,2))
 
-    model = Sequential()
-    model.add(Dense(32, input_shape=(len(modellist),8)))
-    model.add(Dense(8, activation='softmax'))
+    if mode=='network':
+        
+        model = Sequential()
+        model.add(Dense(32, input_shape=(len(modellist),8)))
+        model.add(Dense(8, activation='softmax'))
 
-    # load the network weights
-    filename = "/work/kstandvoss/predictions/model_loss-xxxxx.hdf5"
-    model.load_weights(filename)
-    model.compile(optimizer='rmsprop',loss='categorical_crossentropy',metrics=['accuracy'])
-    print(model.summary())
+        # load the network weights
+        filename = "/work/kstandvoss/predictions/model_loss-xxxxx.hdf5"
+        model.load_weights(filename)
+        model.compile(optimizer='rmsprop',loss='categorical_crossentropy',metrics=['accuracy'])
+        print(model.summary())
 
-    predictions = model.predict(test)
-    print(predictions.shape)
+        predictions = model.predict(test)
+        print(predictions.shape)
+    elif mode=="mean":
+        predictions = np.mean(test,axis=0)
+        print(predictions.shape)
+    elif mode=='max':
+        predictions = np.max(test,axis=0)
+        print(predictions.shape)
 
     HY.write_submission('ensemble_submission', predictions, filenames)
 

@@ -113,7 +113,7 @@ def val_generator(data, labels, val_indx, batch_size):
 Wrapper function to run model training and evaluation
 @params - model parameters to optimize
 '''
-def run_model(params=None, m=None,data=None, labels=None,train_indx=None,val_indx=None):  
+def run_model(params=None, m=None, data=None, labels=None, train_indx=None, val_indx=None):  
 
     global best
     global model
@@ -161,7 +161,7 @@ def run_model(params=None, m=None,data=None, labels=None,train_indx=None,val_ind
 
 def write_submission(csv_name, predictions, filenames):
     preds = np.clip(predictions, 0.01, 1-0.01)
-    sub_fn = 'data/' + csv_name 
+    sub_fn = '/work/kstandvoss/data/' + csv_name
     
     with open(sub_fn + '.csv', 'w') as f:
         print("Writing Predictions to CSV...")
@@ -171,15 +171,18 @@ def write_submission(csv_name, predictions, filenames):
             f.write('%s,%s\n' % (os.path.basename(str(image_name[0],'utf-8')), ','.join(pred)))
         print("Done.")
 
-def optimize(max_evals):
+def optimize(max_evals, data=None, labels=None, train_indx=None, val_indx=None):
     #space = CCN.space
     space = Inception.space
     print('start optimization')
-    best_run = fmin(run_model, space, algo = tpe.suggest, max_evals = max_evals)
+
+    run = lambda params: run_model(params, data=data, labels=labels, train_indx=train_indx, val_indx=val_indx)
+    best_run = fmin(run, space, algo = tpe.suggest, max_evals = max_evals)
 
     print(best_run)
-    pickle.dump(best_run, open('models/inception_loss-{}.pkl'.format(best), 'wb'))
-    model.save_weights('models/inception_loss-{}.h5'.format(best))
+
+    pickle.dump(best_run, open('/work/kstandvoss/models/inception_loss-{}.pkl'.format(best), 'wb'))
+    model.save_weights('/work/kstandvoss/models/inception_loss-{}.h5'.format(best))
 
     # serialize model to JSON
     model_json = model.to_json()
@@ -201,17 +204,17 @@ if __name__ == '__main__':
     if sys.argv[1] == '-o':
         data, labels, train_indx, val_indx = data(False, False, False)
         max_evals = int(sys.argv[2])
-        optimize(max_evals)
+        optimize(max_evals,data=data, labels=labels,train_indx=train_indx,val_indx=val_indx)
     elif sys.argv[1] == '-r':
         data, labels, train_indx, val_indx = data(False, True, False)
-        params = pickle.load(open('models/{}.pkl'.format('inception_loss-0.3928944135109009'),'rb'))
+        params = pickle.load(open('/work/kstandvoss/models/{}.pkl'.format('inception_loss-0.3928944135109009'),'rb'))
         run_model((params['lr'],64,'sgd'),data=data, labels=labels,train_indx=train_indx,val_indx=val_indx)        
     else:
         name = sys.argv[1]
         data, labels, train_indx, val_indx = data(True, True, False)
-        params = pickle.load(open('models/{}.pkl'.format(name),'rb'))
+        params = pickle.load(open('/work/kstandvoss/models/{}.pkl'.format(name),'rb'))
         model = Inception((data[0].shape[0], data[0].shape[1]),8,100,lr=1e-4,batch_size=64, optimizer='sgd')
-        model.model.load_weights('models/{}.h5'.format(name))
+        model.model.load_weights('/work/kstandvoss/models/{}.h5'.format(name))
 
         for layer in model.model.layers[:236]:
             layer.trainable = False

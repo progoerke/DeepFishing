@@ -186,8 +186,6 @@ if __name__ == '__main__':
     global model
     best = np.inf
 
-    
-
     if sys.argv[1] == '-o':
         data, labels, train_indx, val_indx = data(False, False, False)
         max_evals = int(sys.argv[2])

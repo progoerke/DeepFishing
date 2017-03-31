@@ -66,8 +66,8 @@ class Inception(Classifier_base):
         output = inception.output
         output = AveragePooling2D((8, 8), strides=(8, 8), name='avg_pool')(output)
         output = Flatten(name='flatten')(output)
-        output = Dense(4096, activation='relu')(output)
-        output = Dropout(0.5)(output)
+        #output = Dense(4096, activation='relu')(output)
+        #output = Dropout(0.5)(output)
         output = Dense(self.n_classes, activation='softmax', name='predictions')(output)
 
         model = self.model = Model(inception.input, output)

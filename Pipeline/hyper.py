@@ -150,6 +150,12 @@ def run_model(params=None, m=None,data=None, labels=None,train_indx=None,val_ind
         model.save_weights('models/inception_loss-{}.h5'.format(best))
         print('new best: ', best, params)
 
+        # serialize model to JSON
+        model_json = model.to_json()
+        with open('model_json/inception_loss-{}.json'.format(best), "w") as json_file:
+            json_file.write(model_json)
+        print("Saved model to disk")
+
     return {'loss': loss, 'status': STATUS_OK}
 
 
@@ -174,6 +180,12 @@ def optimize(max_evals):
     print(best_run)
     pickle.dump(best_run, open('models/inception_loss-{}.pkl'.format(best), 'wb'))
     model.save_weights('models/inception_loss-{}.h5'.format(best))
+
+    # serialize model to JSON
+    model_json = model.to_json()
+    with open('model_json/inception_loss-{}.json'.format(best), "w") as json_file:
+        json_file.write(model_json)
+    print("Saved model to disk")
     
 
 if __name__ == '__main__':
@@ -193,7 +205,7 @@ if __name__ == '__main__':
     elif sys.argv[1] == '-r':
         data, labels, train_indx, val_indx = data(False, True, False)
         params = pickle.load(open('models/{}.pkl'.format('inception_loss-0.3928944135109009'),'rb'))
-        run_model((params['lr'],64,'sgd'),data=data, labels=labels,train_indx=train_indx,val_indx=val_indx,)        
+        run_model((params['lr'],64,'sgd'),data=data, labels=labels,train_indx=train_indx,val_indx=val_indx)        
     else:
         name = sys.argv[1]
         data, labels, train_indx, val_indx = data(True, True, False)

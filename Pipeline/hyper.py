@@ -26,13 +26,13 @@ from keras.optimizers import SGD
 
 '''
 Load data and split into partitions for cross validation
-@param load: if true entire data is laoded into memory
+@param load: if true entire data is loaded into memory
 '''
 def data(load=False, use_cached=True, use_heatmap=True):
     
     cval_splits = 5
-
-    data, labels, _, _ = dataloader.load_train(filepath='/work/kstandvoss/train_mat.hdf5',use_cached=use_cached, use_heatmap=use_heatmap)
+    #/work/kstandvoss/
+    data, labels, _, _ = dataloader.load_train(filepath='train_mat.hdf5',use_cached=use_cached, use_heatmap=use_heatmap)
     print('loaded images')
     print('start cross validation')
     cval_indx = CV.VGG_CV(data, labels, folds=cval_splits, use_cached=use_cached)
@@ -113,7 +113,7 @@ def val_generator(data, labels, val_indx, batch_size):
 Wrapper function to run model training and evaluation
 @params - model parameters to optimize
 '''
-def run_model(params=None, m=None):  
+def run_model(params=None, m=None, data=None, labels=None, train_indx=None, val_indx=None):  
 
     global best
     global model
@@ -153,9 +153,9 @@ def run_model(params=None, m=None):
     return {'loss': loss, 'status': STATUS_OK}
 
 
-def write_submission(predictions, filenames):
+def write_submission(csv_name, predictions, filenames):
     preds = np.clip(predictions, 0.01, 1-0.01)
-    sub_fn = '/work/kstandvoss/data/first' 
+    sub_fn = '/work/kstandvoss/data/' + csv_name
     
     with open(sub_fn + '.csv', 'w') as f:
         print("Writing Predictions to CSV...")
@@ -165,11 +165,13 @@ def write_submission(predictions, filenames):
             f.write('%s,%s\n' % (os.path.basename(str(image_name[0],'utf-8')), ','.join(pred)))
         print("Done.")
 
-def optimize(max_evals):
+def optimize(max_evals, data=None, labels=None, train_indx=None, val_indx=None):
     #space = CCN.space
     space = Inception.space
     print('start optimization')
-    best_run = fmin(run_model, space, algo = tpe.suggest, max_evals = max_evals)
+
+    run = lambda params: run_model(params, data=data, labels=labels, train_indx=train_indx, val_indx=val_indx)
+    best_run = fmin(run, space, algo = tpe.suggest, max_evals = max_evals)
 
     print(best_run)
     pickle.dump(best_run, open('/work/kstandvoss/models/inception_loss-{}.pkl'.format(best), 'wb'))
@@ -189,11 +191,11 @@ if __name__ == '__main__':
     if sys.argv[1] == '-o':
         data, labels, train_indx, val_indx = data(False, False, False)
         max_evals = int(sys.argv[2])
-        optimize(max_evals)
+        optimize(max_evals,data=data, labels=labels,train_indx=train_indx,val_indx=val_indx)
     elif sys.argv[1] == '-r':
         data, labels, train_indx, val_indx = data(False, True, False)
         params = pickle.load(open('/work/kstandvoss/models/{}.pkl'.format('inception_loss-0.3928944135109009'),'rb'))
-        run_model((params['lr'],64,'sgd'))        
+        run_model((params['lr'],64,'sgd'),data=data, labels=labels,train_indx=train_indx,val_indx=val_indx)        
     else:
         name = sys.argv[1]
         data, labels, train_indx, val_indx = data(True, True, False)
@@ -208,9 +210,9 @@ if __name__ == '__main__':
         model.model.compile(loss='categorical_crossentropy',
                       optimizer=model.optimizer,
                       metrics=["accuracy"])
-        run_model(m=model)
+        run_model(m=model,data=data, labels=labels,train_indx=train_indx,val_indx=val_indx)
     
     test, filenames, _ = dataloader.load_test(filepath='/work/kstandvoss/test_mat.hdf5', use_chached=True, use_heatmap=False)
     print(filenames) 
     preds = model.predict(test)
-    write_submission(preds, filenames)
+    write_submission('first',preds, filenames)

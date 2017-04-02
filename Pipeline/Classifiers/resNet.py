@@ -14,7 +14,6 @@ from keras.utils.layer_utils import convert_all_kernels_in_model
 from keras.callbacks import EarlyStopping
 from keras import optimizers
 
-
 from Classifiers.classifier_base import Classifier_base
 
 from math import log
@@ -22,14 +21,14 @@ from math import log
 from hyperopt import hp
 ###################################### ----- INCEPTION V3 MODEL ----- #################################################
 
-def inception_preprocess(x):
+def resnet_preprocess(x):
     x /= 255.
     x -= 0.5
     x *= 2.
     return x
 
 
-class Inception(Classifier_base):
+class ResNet(Classifier_base):
 
 
     space = (
@@ -58,19 +57,29 @@ class Inception(Classifier_base):
         Returns stacked model
         """
         #img_input = Input(shape=(self.size[0], self.size[1], 3))
-        inception = InceptionV3(include_top=False, weights='imagenet', input_shape=(self.size[0], self.size[1], 3))
 
-        for layer in inception.layers:
+        resnet_model = ResNet50(include_top=False,weights='imagenet', input_shape=(self.size[0], self.size[1], 3))
+
+        # img_path = 'elephant.jpg'
+        # img = image.load_img(img_path, target_size=(224, 224))
+        # x = image.img_to_array(img)
+        # x = np.expand_dims(x, axis=0)
+        # x = preprocess_input(x)
+
+        # preds = model.predict(x)
+        # print('Predicted:', decode_predictions(preds))
+
+        for layer in resnet_model.layers:
             layer.trainable = False
 
-        output = inception.output
+        output = resnet_model.output
         output = AveragePooling2D((8, 8), strides=(8, 8), name='avg_pool')(output)
         output = Flatten(name='flatten')(output)
         output = Dense(4096, activation='relu')(output)
         output = Dropout(0.5)(output)
         output = Dense(self.n_classes, activation='softmax', name='predictions')(output)
 
-        model = self.model = Model(inception.input, output)
+        model = self.model = Model(resnet_model.input, output)
 
         if self.optimizer == 'adam':
             opt = optimizers.adam(lr=self.lr)

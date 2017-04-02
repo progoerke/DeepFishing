@@ -147,7 +147,7 @@ class Inception(Classifier_base):
 
     def fit(self, train_generator, validation_generator, split):
 
-        early = EarlyStopping(monitor='val_loss', min_delta=0, patience=10, verbose=0, mode='auto')
+        early = EarlyStopping(monitor='val_loss', min_delta=0, patience=5, verbose=0, mode='auto')
 
         if not self.class_weight:
             self.class_weight = 'auto'

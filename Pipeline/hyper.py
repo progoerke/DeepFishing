@@ -57,13 +57,11 @@ def train_generator(data, labels, train_indx, batch_size):
     np.random.shuffle(train_indx)
     start = 0
     prob_8 = 1/(np.sum(labels,axis=0)+1)
-    print(prob_8)
     prob_all = np.zeros(len(train_indx))
     for ind,i in enumerate(train_indx):
         prob_all[ind] = prob_8[labels[i]==1]
     
     prob_all = prob_all/np.sum(prob_all)
-    print(prob_all)
 
     datagen = ImageDataGenerator(
             rotation_range=15,

@@ -8,6 +8,7 @@ data/sample_submission_stg1.csv
 Pipeline/data/train
 Pipeline/data/cropped
 Pipeline/data/resized
+Pipeline/data/new_resized
 Pipeline/data/test_stg1
 Pipeline/data/train_smaller
 

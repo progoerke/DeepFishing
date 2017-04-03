@@ -66,25 +66,14 @@ def VGG_CV(data, data_labels, img_height = 400, img_width=400, n_clusts = 5, fol
         if not num_pictures:
             continue
 
-        indexes = np.where(data_labels[:,fish]==1)[0] #np.zeros(num_pictures)
-        #cont = 0
-        #for ind in range(0,len(data)):
-        #    if data_labels[ind][fish] == 1:
-        #        indexes[cont] = ind
-        #        cont+=1
+        indexes = np.where(data_labels[:,fish]==1)[0] 
 
         print('get pictures')
         # Get pictures
-        class_pictures = data[indexes.tolist()] #np.zeros([num_pictures,img_height, img_width, 3])
-        #cont1 = 0
-        #for ind, label in enumerate(data_labels):
-        #    if label[fish] == 1:
-        #        class_pictures[cont1] = data[ind]
-        #        cont1+=1
+        class_pictures = data[indexes.tolist()] 
     
         print('get features')
         # Get features
-        #preprocessed_images = class_pictures #np.vstack([preprocess_image(fn) for fn in class_pictures])
         vgg_features = model.predict(class_pictures)
         print('reshape')
         vgg_features = np.reshape(vgg_features,(len(class_pictures), -1))

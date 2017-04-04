@@ -15,7 +15,7 @@ from heatmap_VisCAM import Heatmap
 from imgloader import load_single_img
 
 def load_test(use_cached=True,filepath='test_mat.hdf5',crop_rows=400,crop_cols=400,no=1000,use_heatmap=False):
-    directories = "/work/kstandvoss/data/test_stg1"               #location of 'train'
+    directories = "data/test_stg1"               #location of 'train'
     #subdirs = listdir(directories)[1::]
     #print(subdirs)
 
@@ -98,7 +98,7 @@ def load_test(use_cached=True,filepath='test_mat.hdf5',crop_rows=400,crop_cols=4
 def load_train(use_cached=True,filepath='train_mat.hdf5',crop_rows=400,crop_cols=400,no=3777,use_heatmap=False):
     fish = ['ALB','BET','DOL','LAG','NoF','OTHER','SHARK','YFT']
     #fish = ['BET']
-    directories = "/work/kstandvoss/data/train"               #location of 'train'
+    directories = "data/train"               #location of 'train'
     #subdirs = listdir(directories)[1::]
     #print(subdirs)
 
@@ -188,47 +188,6 @@ def load_train(use_cached=True,filepath='train_mat.hdf5',crop_rows=400,crop_cols
 
     sys.stdout.write('\n Doooone :)\n')
     return images, targets, ids, crop_idx
-
-def load_max_idx():
-    fish = ['ALB','BET','DOL','LAG','NoF','OTHER','SHARK','YFT']
-    #fish = ['BET']
-    directories = "/work/kstandvoss/data/train"               #location of 'train'
-    #subdirs = listdir(directories)[1::]
-    #print(subdirs)
-
-    center_rows = []
-    center_cols = []
-
-    print('Read train images')
-    total = 0
-    no = 0
-    model, layer_idx, pred_class = initialize()
-    for i,d in enumerate(fish): #parse all subdirections
-        sys.stdout.write(".")
-        sys.stdout.flush()
-        
-        files = listdir(directories+"/"+d)  
-        for j, f in enumerate(files):           #parse through all files
-        #print(f)
-            if not(f == '.DS_Store'):
-                print(total)
-                current_img = load_single_img(directories+"/"+d+"/"+f,convert_bgr=True)
-                #print(directories+"/"+d+"/"+f)
-
-                _,max_idx,_ = heatmap(current_img, model, layer_idx, pred_class)
-                #print(max_idx)
-                center_rows.append(max_idx[0])
-                center_cols.append(max_idx[1])
-                # Get from heatmap/box
-                total += 1
-                if total == 250:
-                    no += 1
-                    pickle.dump(center_rows,open('center_rows'+no+'.pkl','wb'))
-                    pickle.dump(center_cols,open('center_cols'+no+'.pkl','wb'))
-                    center_rows = []
-                    center_cols = []
-    
-    sys.stdout.write('\n Doooone :)\n')
 
 #load_train(filepath='just_test.hdf5',use_cached=False, use_heatmap = False,no=80)
 #load_test(filepath='/work/kstandvoss/test_mat.hdf5',use_cached=False, use_heatmap = False)

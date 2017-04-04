@@ -9,6 +9,7 @@ from keras.layers import Input, Activation, Lambda
 from keras.models import Sequential, Model
 from keras.preprocessing.image import ImageDataGenerator
 from keras.applications import InceptionV3
+from keras.applications import ResNet50
 from keras.applications.resnet50 import identity_block, conv_block
 from keras.utils.layer_utils import convert_all_kernels_in_model
 from keras.callbacks import EarlyStopping
@@ -73,7 +74,7 @@ class ResNet(Classifier_base):
             layer.trainable = False
 
         output = resnet_model.output
-        output = AveragePooling2D((8, 8), strides=(8, 8), name='avg_pool')(output)
+#        output = AveragePooling2D((8, 8), strides=(8, 8), name='avg_pool')(output)
         output = Flatten(name='flatten')(output)
         output = Dense(4096, activation='relu')(output)
         output = Dropout(0.5)(output)

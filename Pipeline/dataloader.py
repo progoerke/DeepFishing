@@ -20,7 +20,7 @@ from imgloader import load_single_img
 from keras.preprocessing.image import img_to_array
 import json
 
-def load_test(use_cached=True,filepath='test_mat.hdf5',directories = 'data/test_stg1', crop_rows=400,crop_cols=400,no=1000,use_heatmap=False):
+def load_test(use_cached=True,filepath='test_mat.hdf5',directories = 'data/test_stg1', crop_rows=400,crop_cols=400,no=1000,mode="resize"):
     #directories = "data/test_stg1"
 
     #hm_directories = directories.replace('/test/', '/test/hm_') # heatmap directory
@@ -58,7 +58,7 @@ def load_test(use_cached=True,filepath='test_mat.hdf5',directories = 'data/test_
 
                 #print(current_img.shape)
 
-                if use_heatmap:
+                if mode is "use_heatmap_sliding":
                     stride = 112
                     best_prob = 0
                     n0 = int(current_img.shape[0] / stride)
@@ -104,7 +104,40 @@ def load_test(use_cached=True,filepath='test_mat.hdf5',directories = 'data/test_
                     crop_idx[total,4] = center_row
                     crop_idx[total,5] = center_col
 
-                else:
+                elif mode is "use_heatmap":
+                    _,max_idx,_ = h.heatmap(current_img)
+                    center_row = max_idx[0]
+                    center_col = max_idx[1]
+                    # Get from heatmap/box
+
+                    start_crop_row = int(center_row - crop_rows/2)
+                    if start_crop_row < 0:
+                        start_crop_row = 0
+                    stop_crop_row = int(start_crop_row + crop_rows)
+                    if stop_crop_row > current_img.shape[0]:
+                        stop_crop_row = current_img.shape[0]
+                        start_crop_row = stop_crop_row - crop_rows
+                    start_crop_col = int(center_col - crop_cols/2)
+                    if start_crop_col < 0:
+                        start_crop_col = 0
+                    stop_crop_col = int(start_crop_col + crop_cols)
+                    if stop_crop_col > current_img.shape[1]:
+                        stop_crop_col = current_img.shape[1]
+                        start_crop_col = stop_crop_col - crop_cols
+
+                    crop_idx[total,0] = start_crop_row
+                    crop_idx[total,1] = stop_crop_row
+                    crop_idx[total,2] = start_crop_col
+                    crop_idx[total,3] = stop_crop_col
+                    crop_idx[total,4] = center_row
+                    crop_idx[total,5] = center_col
+
+                    current_img = current_img.astype('float32')
+                    current_img /= 255
+
+                    current_img = current_img[start_crop_row:stop_crop_row,start_crop_col:stop_crop_col,:]
+
+                elif mode is "resize"
                     current_img = current_img.astype('float32')
                     current_img /= 255
                     current_img = cv2.resize(current_img, (crop_cols, crop_rows))
@@ -128,7 +161,7 @@ def load_test(use_cached=True,filepath='test_mat.hdf5',directories = 'data/test_
     sys.stdout.write('\n Doooone :)\n')
     return images, ids, crop_idx
 
-def load_train(use_cached=True,filepath='train_mat.hdf5',crop_rows=400,crop_cols=400,no=3777,use_heatmap=False):
+def load_train(use_cached=True,filepath='train_mat.hdf5',crop_rows=400,crop_cols=400,no=3777,mode="resize"):
     fish = ['ALB','BET','DOL','LAG','NoF','OTHER','SHARK','YFT']
     #fish = ['ALB','DOL','LAG']
     directories = "data/train"               #location of 'train'
@@ -190,7 +223,7 @@ def load_train(use_cached=True,filepath='train_mat.hdf5',crop_rows=400,crop_cols
                     #else:
                     #    current_img = img
 
-                    if use_heatmap:
+                    if mode is "use_heatmap_sliding":
                         stride=112
                         best_prob=0
                         n0 = int(current_img.shape[0] / stride)
@@ -239,7 +272,40 @@ def load_train(use_cached=True,filepath='train_mat.hdf5',crop_rows=400,crop_cols
 
                         current_img = current_img[start_crop_row:stop_crop_row,start_crop_col:stop_crop_col,:]
 
-                    else:
+                    elif mode is "use_heatmap":
+                        _,max_idx,_ = h.heatmap(current_img)
+                        center_row = max_idx[0]
+                        center_col = max_idx[1]
+                        # Get from heatmap/box
+
+                        start_crop_row = int(center_row - crop_rows/2)
+                        if start_crop_row < 0:
+                            start_crop_row = 0
+                        stop_crop_row = int(start_crop_row + crop_rows)
+                        if stop_crop_row > current_img.shape[0]:
+                            stop_crop_row = current_img.shape[0]
+                            start_crop_row = stop_crop_row - crop_rows
+                        start_crop_col = int(center_col - crop_cols/2)
+                        if start_crop_col < 0:
+                            start_crop_col = 0
+                        stop_crop_col = int(start_crop_col + crop_cols)
+                        if stop_crop_col > current_img.shape[1]:
+                            stop_crop_col = current_img.shape[1]
+                            start_crop_col = stop_crop_col - crop_cols
+
+                        crop_idx[total,0] = start_crop_row
+                        crop_idx[total,1] = stop_crop_row
+                        crop_idx[total,2] = start_crop_col
+                        crop_idx[total,3] = stop_crop_col
+                        crop_idx[total,4] = center_row
+                        crop_idx[total,5] = center_col
+
+                        current_img = current_img.astype('float32')
+                        current_img /= 255
+
+                        current_img = current_img[start_crop_row:stop_crop_row,start_crop_col:stop_crop_col,:]
+
+                    elif mode is "resize":
                         current_img = current_img.astype('float32')
                         current_img /= 255
                         current_img = cv2.resize(current_img, (crop_cols, crop_rows))

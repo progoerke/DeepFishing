@@ -9,8 +9,8 @@ from keras.layers.core import Dense
 from keras.callbacks import ModelCheckpoint
 
 def create_predictions(modellist):
-    test, test_filenames, _ = dataloader.load_test(filepath='/work/kstandvoss/test_mat.hdf5', use_cached=True, use_heatmap=False)
-    train, targets, train_filenames, _ = dataloader.load_train(filepath='/work/kstandvoss/train_mat.hdf5', use_cached=True, use_heatmap=False)
+    test, test_filenames, _ = dataloader.load_test(filepath='/work/kstandvoss/test_mat.hdf5', directories = 'data/test_stg1',use_cached=True, mode="resize")
+    train, targets, train_filenames, _ = dataloader.load_train(filepath='/work/kstandvoss/train_mat.hdf5', directories = 'data/train',use_cached=True, mode="resize")
     pickle.dump(targets[:],open('/work/kstandvoss/predictions/targets.pkl','wb'))
     pickle.dump(test_filenames[:],open('/work/kstandvoss/predictions/test_filenames.pkl','wb'))
     pickle.dump(train_filenames[:],open('/work/kstandvoss/predictions/train_filenames.pkl','wb'))

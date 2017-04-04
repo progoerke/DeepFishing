@@ -33,7 +33,7 @@ def data(load=False, use_cached=True, use_heatmap=True):
     
     cval_splits = 5
     #/work/kstandvoss/
-    data, labels, _, _ = dataloader.load_train(filepath='data/train.hdf5',use_cached=use_cached, use_heatmap=use_heatmap)
+    data, labels, _, _ = dataloader.load_train(filepath='data/train.hdf5',directories='data/train',use_cached=use_cached, mode="resize")
     print('loaded images')
     print('start cross validation')
     cval_indx = CV.VGG_CV(data, labels, folds=cval_splits, use_cached=use_cached)
@@ -226,7 +226,7 @@ if __name__ == '__main__':
                       metrics=["accuracy"])
         run_model(m=model,data=data, labels=labels,train_indx=train_indx,val_indx=val_indx)
     
-    test, filenames, _ = dataloader.load_test(filepath='data/test_mat.hdf5', use_chached=True, use_heatmap=False)
+    test, filenames, _ = dataloader.load_test(filepath='data/test_mat.hdf5', directories='data/test_stg1',use_chached=True, mode="resize")
     print(filenames) 
     preds = model.predict(test)
     write_submission('resnet01',preds, filenames)

@@ -51,6 +51,10 @@ class Heatmap:
         #s = "n02626762"  # Imagenet code for "tuna"
         s = "n02536864"  # Imagenet code for "silver salmon" = 391
         self.pred_class = synset_to_dfs_ids(s)
+        s = "n01484850"  # Imagenet code for "white shark"
+        self.pred_class += synset_to_dfs_ids(s)
+        s = "n02514041"  # Imagenet code for "barracoute, snoek"
+        self.pred_class += synset_to_dfs_ids(s)
         
 
     def heatmap(self, img):

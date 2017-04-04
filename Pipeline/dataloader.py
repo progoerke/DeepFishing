@@ -137,7 +137,7 @@ def load_test(use_cached=True,filepath='test_mat.hdf5',directories = 'data/test_
 
                     current_img = current_img[start_crop_row:stop_crop_row,start_crop_col:stop_crop_col,:]
 
-                elif mode is "resize"
+                elif mode is "resize":
                     current_img = current_img.astype('float32')
                     current_img /= 255
                     current_img = cv2.resize(current_img, (crop_cols, crop_rows))

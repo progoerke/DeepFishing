@@ -32,8 +32,8 @@ class Pre_Network:
 
     def __init__(self):
         #read data including img_height, img_width
-        self.train_images, targets, self.masks, self.train_ids = load_train(use_cached=True,filepath='/work/kstandvoss/bb_train_mat.hdf5')
-        self.test_images, self.test_ids = self.load_test()
+        self.train_images, targets, self.masks, self.train_ids = load_train(use_cached=True,filepath='data/bb_train_mat.hdf5')
+        #self.test_images, self.test_ids = self.load_test()
         # 584, 565,
         # 31
         # 147, 142
@@ -43,6 +43,11 @@ class Pre_Network:
         patch_size_width = 101
         # Model
         base_model = VGG16(weights = 'imagenet', include_top = False, input_shape = (patch_size_height, patch_size_width, 3))
+
+        for layer in base_model.layers:
+          layer.trainable = False
+
+
         x = base_model.output
         #x = ZeroPadding2D((1,1))(x)
         #x = Convolution2D(1024, 5,5, activation='relu')(x)
@@ -57,7 +62,7 @@ class Pre_Network:
 
         print(self.new_model.summary())
     
-    def load_test(self,filepath='/work/kstandvoss/test_mat.hdf5'):
+    def load_test(self,filepath='data/test_mat.hdf5'):
         print('load from hdf5 file')
         file = h5py.File(filepath, "r")
 
@@ -175,7 +180,7 @@ class Pre_Network:
         file.flush()
         file.close()
 
-    def load_model(self,model_name='/work/kstandvoss/new_model'):
+    def load_model(self,model_name='new_model'):
         # load json and create model
         json_file = open(model_name + '.json', 'r')
         loaded_model_json = json_file.read()
@@ -284,9 +289,9 @@ class Pre_Network:
         # sys.stdout.write('\n Loaded :)\n')
         return patch_arr, labels    
 
-    def train_model(self,model_name='/work/kstandvoss/new_model'):
+    def train_model(self,model_name='new_model'):
         #train your model on data
-        batch_size = 32
+        batch_size = 2
         for batch in range(0,len(self.train_images),batch_size):
             imgs = self.train_images[batch:batch+batch_size]
             msks = self.masks[batch:batch+batch_size]

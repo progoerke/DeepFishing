@@ -9,7 +9,7 @@ from imgloader import load_single_img
 def load_train(use_cached=True,filepath='bb_train_mat.hdf5',crop_rows = 400,crop_cols = 400 ,no=3777):
     fish = ['ALB','BET','DOL','LAG','OTHER','SHARK','YFT']
     #fish = ['SHARK']
-    img_directories = "/work/kstandvoss/equalized"               #location of 'train'
+    img_directories = "data/train"               #location of 'train'
     bb_directories = "bb_data"
     #subdirs = listdir(directories)[1::]
     #print(subdirs)

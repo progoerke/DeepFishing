@@ -44,11 +44,11 @@ class Stacking(object):
                 val_indx = selector[0].tolist()
                 val_indx.sort()
                 # Load the model
-                base_model = Inception((data[0].shape[0], data[0].shape[1]), 8, 50, *self.base_models_args[j])
+                base_model = Inception((data[0].shape[0], data[0].shape[1]), 8, 50, *self.base_models_args[i])
                 # Train
                 model = self.train_model(classifier=base_model, data=data, labels=labels, train_indx=train_indx, val_indx=val_indx)
                 #Get predictions
-                val_set = [data[i] for i in val_indx]
+                val_set = [data[k] for k in val_indx]
                 y_pred = base_model.predict(val_set)
                 s_train[val_indx, i*n_classes:i*n_classes+n_classes] = y_pred
                 s_test_i[j,:,:] = model.predict(test)
@@ -65,13 +65,13 @@ class Stacking(object):
         print(stacker.summary())
 
         # define the checkpoint
-        filepath = '/models/stacker_model_loss-{loss:.4f}.hdf5'
-        checkpoint = ModelCheckpoint(filepath, monitor='loss', verbose=1)
+        filepath = 'models/stacker_model_loss-{loss:.4f}.hdf5'
+        checkpoint = ModelCheckpoint(filepath, monitor='loss', verbose=1, save_best_only=True)
         callbacks_list = [checkpoint]
 
         # Fit the model
 
-        stacker.fit(s_train, labels, nb_epoch=100, batch_size=32, callbacks=callbacks_list)
+        stacker.fit(s_train, labels, nb_epoch=100, batch_size=32, callbacks=callbacks_list, shuffle='batch')
         y_pred = stacker.predict(s_test)
         return y_pred
 
@@ -118,17 +118,17 @@ if __name__ == '__main__':
     stacker_arg = []
     for file in model_arg_files:
         model_arg_list.append(pickle.load(open(file, "rb")))
-    stacker_arg = pickle.load(open(stacker_arg_file, "rb"))
+#    stacker_arg = pickle.load(open(stacker_arg_file, "rb"))
     print("Parameters read")
     # Prepare data
     print("Loading training data...")
-    data, labels, _, _ = dataloader.load_train(filepath='/data/train.hdf5',use_cached=use_cached)
+    data, labels, _, _ = dataloader.load_train(filepath='data/train.hdf5',use_cached=use_cached)
     print("Training data loaded")
     print("Creating {}-folds...".format(n_folds))
     cval_indx = CV.VGG_CV(data, labels, folds=n_folds, use_cached = True)
     print("Folds created")
     print("Load test data")
-    test, filenames, _ = dataloader.load_test(filepath='/data/test_stg1//test_mat.hdf5') # use_cached=use_cached
+    test, filenames, _ = dataloader.load_test(filepath='data/test_stg1.hdf5') # use_cached=use_cached
     print("Test data loaded")
     # Run everything
     print("Running stacking...")

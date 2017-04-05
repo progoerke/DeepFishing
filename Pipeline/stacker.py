@@ -2,6 +2,7 @@ import dataloader
 import pickle
 import numpy as np
 from Classifiers.inceptionV3 import Inception
+import hyper as HY
 
 from keras.models import Sequential
 from keras.layers.core import Dense
@@ -132,5 +133,7 @@ if __name__ == '__main__':
     # Run everything
     print("Running stacking...")
     st = Stacking(n_folds, stacker_arg, model_arg_list)
-    st.fit_predict(data, labels, cval_indx, test)
+    predictions = st.fit_predict(data, labels, cval_indx, test)
+    print("Saving results...")
+    HY.write_submission('stacking_submission', predictions, filenames)
     print("Stacking finished")

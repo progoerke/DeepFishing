@@ -223,7 +223,7 @@ if __name__ == '__main__':
                       metrics=["accuracy"])
         run_model(m=model,data=data, labels=labels,train_indx=train_indx,val_indx=val_indx)
     
-    test, filenames, _ = dataloader.load_test(filepath='/work/kstandvoss/test_mat.hdf5',directories='data/test_stg1' use_cached=True, mode="resize")
+    test, filenames, _ = dataloader.load_test(filepath='/work/kstandvoss/test_mat.hdf5',directories='data/test_stg1', use_cached=True, mode="resize")
     print(filenames) 
     preds = model.predict(test)
     write_submission('first',preds, filenames)

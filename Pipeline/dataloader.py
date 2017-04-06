@@ -15,7 +15,7 @@ from heatmap_VisCAM import Heatmap
 from imgloader import load_single_img
 
 def load_test(use_cached=True,filepath='test_mat.hdf5',crop_rows=400,crop_cols=400,no=1000,use_heatmap=False):
-    directories = "/work/kstandvoss/data/test_stg1"               #location of 'train'
+    directories = "data/test_stg1"               #location of 'train'
     #subdirs = listdir(directories)[1::]
     #print(subdirs)
 
@@ -98,7 +98,7 @@ def load_test(use_cached=True,filepath='test_mat.hdf5',crop_rows=400,crop_cols=4
 def load_train(use_cached=True,filepath='train_mat.hdf5',crop_rows=400,crop_cols=400,no=3777,use_heatmap=False):
     fish = ['ALB','BET','DOL','LAG','NoF','OTHER','SHARK','YFT']
     #fish = ['BET']
-    directories = "/work/kstandvoss/data/train"               #location of 'train'
+    directories = "data/train"               #location of 'train'
     #subdirs = listdir(directories)[1::]
     #print(subdirs)
 
@@ -230,8 +230,8 @@ def load_max_idx():
     
     sys.stdout.write('\n Doooone :)\n')
 
-#load_train(filepath='just_test.hdf5',use_cached=False, use_heatmap = False,no=80)
-#load_test(filepath='/work/kstandvoss/test_mat.hdf5',use_cached=False, use_heatmap = False)
+load_train(filepath='data/train_mat.hdf5',use_cached=False, use_heatmap = False)
+#load_test(filepath='data/test_mat.hdf5',use_cached=False, use_heatmap = False)
 #load_max_idx()
 #load_train(use_cached=False)
 

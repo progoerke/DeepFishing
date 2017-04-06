@@ -11,9 +11,9 @@ import math
 import time
 import cv2
 from skimage import io
-from blurBoats_v2 import boat_clusters
-from blurBoats_v2 import average_clusters
-from blurBoats_v2 import blurBoat
+from blurBoats import boat_clusters
+from blurBoats import average_clusters
+from blurBoats import blurBoat
 
 from heatmap_VisCAM import Heatmap
 from imgloader import load_single_img

@@ -31,7 +31,6 @@ Load data and split into partitions for cross validation
 def data(load=False, use_cached=True, use_heatmap=True):
     
     cval_splits = 5
-    #/work/kstandvoss/
     data, labels, _, _ = dataloader.load_train(filepath='/work/kstandvoss/train_mat_heat.hdf5',directories='data/train',use_cached=use_cached, mode="resize")
     print('loaded images')
     print('start cross validation')

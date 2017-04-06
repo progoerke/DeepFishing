@@ -33,10 +33,7 @@ class Pre_Network:
     def __init__(self):
         #read data including img_height, img_width
         self.train_images, targets, self.masks, self.train_ids = load_train(use_cached=True,filepath='data/bb_train_mat.hdf5')
-        #self.test_images, self.test_ids = self.load_test()
-        # 584, 565,
-        # 31
-        # 147, 142
+        
         self.img_height = self.train_images.shape[1]
         self.img_width = self.train_images.shape[2]
         patch_size_height = 101
@@ -49,10 +46,6 @@ class Pre_Network:
 
 
         x = base_model.output
-        #x = ZeroPadding2D((1,1))(x)
-        #x = Convolution2D(1024, 5,5, activation='relu')(x)
-        #x = Convolution2D(1024, 4,4, activation='relu')(x)
-        #x = Convolution2D(1024, 3,3, activation='relu')(x)
         x = Convolution2D(1024, 3,3, activation='relu')(x)
         predictions = Convolution2D(2, 1, 1, activation='relu')(x)
         #create graph of your new model
@@ -96,11 +89,9 @@ class Pre_Network:
 
         im_p_sh = im_padded.shape
         
-        # Now implement a loop that:
-        # - obtains a shifted version of the image
-        # - applies the fully convolutional network
-        # - and places the network output in the output of this function
-            
+        # - obtain a shifted version of the image
+        # - apply the fully convolutional network
+        # - place the network output in the output of this function        
         for row in range(0, stride):
             for col in range(0, stride):
                 sys.stdout.write(".")
@@ -133,9 +124,6 @@ class Pre_Network:
         
         return output
         
-
-# AUCH AUF TEST train_images, ERSTELLE ZWEI HDF5 FILES
-
     def apply_shift_stitch(self,filepath_train='/work/kstandvoss/sas_train_mat.hdf5',filepath_test='/work/kstandvoss/sas_test_mat.hdf5'):
 
         print('create new train hdf5 file')
@@ -191,84 +179,6 @@ class Pre_Network:
         print("Loaded model from disk")
 
     def extract_patches(self,imgs, msks,patch_size=101,stride=50):
-        # if use_cached:
-        #     print('load from patches hdf5 file')
-        #     file = h5py.File(filepath_patches, "r")
-        #     patches = file["patches"]
-        #     labels = file["labels"]
-        # else:
-        #     num = self.train_images.shape[0]
-
-        #     print('create new patches hdf5 file')
-        #     file = h5py.File(filepath_patches, "w")
-        #     no_chunks = 64
-        #     dt = h5py.special_dtype(vlen=bytes)
-
-        #     patches = file.create_dataset("patches", (num*5*5, patch_size, patch_size,3), chunks=(no_chunks, patch_size, patch_size,3), dtype='f', compression="lzf")
-        #     labels = file.create_dataset("labels", (num*5*5,1,1,2), chunks=(no_chunks,1,1,2), dtype='i8')
-            
-        #     with tf.Session() as sess:
-        #         size = 500
-        #         for i in range(0,3777,size):
-        #             print('patch {}:'.format(i))
-        #             if i+size > 3777:
-        #                 patch_arr = tf.extract_image_patches(self.train_images[i:,:,:,:], ksizes=[1, patch_size, patch_size, 1], strides=[1, stride, stride, 1], rates=[1, 1, 1, 1], padding='SAME').eval()
-        #                 dims = patch_arr.shape
-        #                 patch_arr = np.reshape(patch_arr,(dims[0]*dims[1]*dims[2],patch_size,patch_size,3))
-        #                 patches[i*dims[1]*dims[2]:] = patch_arr
-        #             else:
-        #                 patch_arr = tf.extract_image_patches(self.train_images[i:i+size,:,:,:], ksizes=[1, patch_size, patch_size, 1], strides=[1, stride, stride, 1], rates=[1, 1, 1, 1], padding='SAME').eval()
-        #                 dims = patch_arr.shape
-        #                 patch_arr = np.reshape(patch_arr,(dims[0]*dims[1]*dims[2],patch_size,patch_size,3))
-        #                 patches[i*dims[1]*dims[2]:(i+size)*dims[1]*dims[2]] = patch_arr
-
-        #     sys.stdout.write('\n Created patches :)\n')
-        #     sys.stdout.flush()
-
-        #     for idx,p in enumerate(self.train_images.shape[0]):
-        #         for i in range(dims[1]):
-        #             for j in range(dims[2]):
-        #                 #print(im_padded[i*stride:i*stride+patch_size,j*stride:j*stride+patch_size,:].shape)
-        #                 #patches[total,:,:,:] = im_padded[i*stride:i*stride+patch_size,j*stride:j*stride+patch_size,:]
-        #                 if self.masks[idx,i*stride,j*stride] == 1:
-        #                     labels[total,:,:,1] = 1
-        #                 else:
-        #                     labels[total,:,:,0] = 1
-        #                 total += 1
-        #             if total%300==0:
-        #                 sys.stdout.write(".")
-        #                 sys.stdout.flush()
-
-
-            #patches = np.zeros((self.train_images.shape[0]*9*9,49,49,3))
-            #labels = np.zeros((self.train_images.shape[0]*9*9,1,1,2))
-            # patches = np.zeros((num*16*16,49,49,3))
-            # labels = np.zeros((num*16*16,1,1,2))
-            # total = 0
-            # for idx,im in enumerate(self.train_images):
-            #     #im_padded = np.pad(im, ((49//2, 49 //2,0),(49//2, 49//2,0)), 'constant', constant_values = [0,0,0])
-            #     im_padded = np.zeros((im.shape[0]+patch_size-1,im.shape[1]+patch_size-1,im.shape[2]))
-            #     im_padded[:,:,0] = np.pad(im[:,:,0], ((patch_size//2, patch_size//2),
-            #                         (patch_size//2, patch_size//2)), 'constant', constant_values = [0,0])
-            #     im_padded[:,:,1] = np.pad(im[:,:,1], ((patch_size//2, patch_size//2),
-            #                         (patch_size//2, patch_size//2)), 'constant', constant_values = [0,0])
-            #     im_padded[:,:,2] = np.pad(im[:,:,2], ((patch_size//2, patch_size//2),
-            #                         (patch_size//2, patch_size//2)), 'constant', constant_values = [0,0])
-            #     for i in range(16):
-            #         for j in range(16):
-            #             #print(im_padded[i*stride:i*stride+patch_size,j*stride:j*stride+patch_size,:].shape)
-            #             patches[total,:,:,:] = im_padded[i*stride:i*stride+patch_size,j*stride:j*stride+patch_size,:]
-            #             if self.masks[idx,i*stride,j*stride] == 1:
-            #                 labels[total,:,:,1] = 1
-            #             else:
-            #                 labels[total,:,:,0] = 1
-            #             total += 1
-            #     if total%300==0:
-            #         sys.stdout.write(".")
-            # #         sys.stdout.flush()
-
-            # file.flush()
-            # file.close()
         with tf.Session() as sess:    
             patch_arr = tf.extract_image_patches(imgs, ksizes=[1, patch_size, patch_size, 1], strides=[1, stride, stride, 1], rates=[1, 1, 1, 1], padding='SAME').eval()
             dims = patch_arr.shape
@@ -279,8 +189,6 @@ class Pre_Network:
         for idx,p in enumerate(imgs):
             for i in range(dims[1]):
                 for j in range(dims[2]):
-                    #print(im_padded[i*stride:i*stride+patch_size,j*stride:j*stride+patch_size,:].shape)
-                    #patches[total,:,:,:] = im_padded[i*stride:i*stride+patch_size,j*stride:j*stride+patch_size,:]
                     if np.sum(msks[idx,(i-1)*stride:(i+1)*stride,(j-1)*stride:(j+1)*stride]) >= 1000:
                         labels[total,:,:,1] = 1
                     else:
@@ -306,6 +214,3 @@ class Pre_Network:
         self.new_model.save_weights(model_name + ".h5")
         print("Saved model to disk")
 
-        #probability = shift_and_stitch(img_g, pad_size, 10)
-
-#train_model()

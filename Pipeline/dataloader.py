@@ -331,21 +331,3 @@ def load_train(use_cached=True,filepath='train_mat.hdf5',crop_rows=400,crop_cols
 
     sys.stdout.write('\n Doooone :)\n')
     return images, targets, ids, crop_idx
-
-#load_train(filepath='just_test.hdf5',use_cached=False, use_heatmap = False,no=80)
-#load_test(filepath='/work/kstandvoss/test_mat.hdf5',use_cached=False, use_heatmap = False)
-#load_max_idx()
-#load_train(use_cached=False)
-
-# start = time.time()
-# load_test(use_cached=False,crop_rows=200,crop_cols=200)
-# end = time.time()
-# print(end - start)
-##626.100456237793
-##548.030868053
-#start = time.time()
-#load_train(use_cached=False,filepath='train_mat_smaller.hdf5',crop_rows=400,crop_cols=400, use_heatmap=True)
-#end = time.time()
-#print(end - start)
-#plt.imshow([[1,0],[0,1]])
-#plt.show()

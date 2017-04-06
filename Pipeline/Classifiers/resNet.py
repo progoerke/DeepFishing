@@ -20,7 +20,7 @@ from Classifiers.classifier_base import Classifier_base
 from math import log
 
 from hyperopt import hp
-###################################### ----- INCEPTION V3 MODEL ----- #################################################
+###################################### ----- RESNET MODEL ----- #################################################
 
 def resnet_preprocess(x):
     x /= 255.
@@ -37,9 +37,6 @@ class ResNet(Classifier_base):
         hp.choice('batch_size',[8,16,32,64]),
         hp.choice('optimizer',['adam','adadelta','sgd'])
     )
-    """
-    The InceptionV3 Imagenet model with Batch Normalization for the Dense Layers
-    """
     def __init__(self, size=(224, 224), n_classes=2, nb_epoch = 12, lr=0.001, batch_size=64, optimizer='adam'):
         self.size = size
         self.n_classes = n_classes
@@ -61,20 +58,10 @@ class ResNet(Classifier_base):
 
         resnet_model = ResNet50(include_top=False,weights='imagenet', input_shape=(self.size[0], self.size[1], 3))
 
-        # img_path = 'elephant.jpg'
-        # img = image.load_img(img_path, target_size=(224, 224))
-        # x = image.img_to_array(img)
-        # x = np.expand_dims(x, axis=0)
-        # x = preprocess_input(x)
-
-        # preds = model.predict(x)
-        # print('Predicted:', decode_predictions(preds))
-
         for layer in resnet_model.layers:
             layer.trainable = False
 
         output = resnet_model.output
-#        output = AveragePooling2D((8, 8), strides=(8, 8), name='avg_pool')(output)
         output = Flatten(name='flatten')(output)
         output = Dense(4096, activation='relu')(output)
         output = Dropout(0.5)(output)

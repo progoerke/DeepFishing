@@ -75,17 +75,3 @@ class Heatmap:
 
 
         return heatmap_orig, max_orig, prob_fish
-    #return None, None, None
-
-# start = time.time()
-# current_img = load_single_img("../../data/train/BET/img_00107.jpg",convert_bgr=True)
-#plt.imshow(current_img)
-#cv2.imshow('current',current_img)
-# h,m,p = heatmap(current_img)
-# print('Max',m)
-# print('Prob',p)
-# print(h.shape)
-# end = time.time()
-# print(end - start)
-# plt.imshow(h)
-# plt.show()

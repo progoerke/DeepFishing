@@ -246,23 +246,3 @@ def heatmap_slider(img, h, stride = 112):
     center_row = max_idx[0]
     center_col = max_idx[1]'''
     # Get from heatmap/box
-
-
-
-#load_train(filepath='just_test.hdf5',use_cached=False, use_heatmap = False,no=80)
-#load_test(filepath='/work/kstandvoss/test_mat.hdf5',use_cached=False, use_heatmap = False)
-#load_max_idx()
-#load_train(use_cached=False)
-
-# start = time.time()
-# load_test(use_cached=False,crop_rows=200,crop_cols=200)
-# end = time.time()
-# print(end - start)
-##626.100456237793
-##548.030868053
-#start = time.time()
-#load_train(use_cached=False,filepath='train_mat_smaller.hdf5',crop_rows=400,crop_cols=400, use_heatmap=True)
-#end = time.time()
-#print(end - start)
-#plt.imshow([[1,0],[0,1]])
-#plt.show()

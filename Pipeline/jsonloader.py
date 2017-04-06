@@ -11,14 +11,11 @@ def load_train(use_cached=True,filepath='bb_train_mat.hdf5',crop_rows = 400,crop
     #fish = ['SHARK']
     img_directories = "data/train"               #location of 'train'
     bb_directories = "bb_data"
-    #subdirs = listdir(directories)[1::]
-    #print(subdirs)
 
     num_total_images = no
     if use_cached is False:
         print('create new hdf5 file')
         file = h5py.File(filepath, "w")
-        #no_chunks = 64
         no_chunks = 2
         dt = h5py.special_dtype(vlen=bytes)
         images = file.create_dataset("images", (num_total_images, crop_rows, crop_cols, 3), chunks=(no_chunks, crop_rows, crop_cols, 3), dtype='f', compression="lzf")
@@ -36,26 +33,21 @@ def load_train(use_cached=True,filepath='bb_train_mat.hdf5',crop_rows = 400,crop
             with open(bb_directories+'/'+d.lower()+'_labels.json') as json_data:
                 json_data = json.load(json_data)
                 for x in json_data:
-                    #load_single_img('data/train/ALB/img_00003.jpg',convert_bgr=True)
-                    #print(img_directories+"/"+d+"/")
-                    #print(x['filename'])
-                    #print(img_directories+"/"+d+"/"+x['filename'])
                     current_img = load_single_img(img_directories+"/"+d+"/"+x['filename'],convert_bgr=True)
                     current_msk = np.zeros((current_img.shape[0], current_img.shape[1]))
                     for bb in x['annotations']:
                     	# x,y is top left corner of bb
-                        # cleaning:
+
                         y_val = int(bb['y'])
                         x_val = int(bb['x'])        
                         height_val = int(bb['height'])
                         width_val = int(bb['width'])
                         
-                        #start_row = current_msk.shape[0]-y_val
+                        # cleaning:
                         start_row = y_val
                         if start_row < 0:
                             start_row = 0
 
-                        #stop_row = current_msk.shape[0]-y_val+height_val
                         stop_row = y_val+height_val
                         if stop_row > current_msk.shape[0]:
                             stop_row = current_msk.shape[0]-1

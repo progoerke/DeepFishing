@@ -32,7 +32,6 @@ Load data and split into partitions for cross validation
 def data(load=False, use_cached=True, use_heatmap=True):
     
     cval_splits = 5
-    #/work/kstandvoss/
     data, labels, _, _ = dataloader.load_train(filepath='data/train.hdf5',directories='data/train',use_cached=use_cached, mode="resize")
     print('loaded images')
     print('start cross validation')
@@ -120,27 +119,15 @@ def run_model(params=None, m=None, data=None, labels=None, train_indx=None, val_
     global model
 
     print(params)
-    #classifier = CCN((data[0].shape[0], data[0].shape[1]),8,15,*params)
     if params:
         classifier = ResNet((data[0].shape[0], data[0].shape[1]),8,50,*params)
     else:
         classifier = m
 
-    #classifier.create_class_weight(dict(enumerate(np.sum(labels,0))))
-
     tg = train_generator(data, labels, train_indx, classifier.batch_size)
     vg = train_generator(data, labels, val_indx, classifier.batch_size)
 
     classifier.fit(tg, vg, (len(train_indx), len(val_indx)))
-
-    #for layer in classifier.model.layers[:172]:
-    #        layer.trainable = False
-    #for layer in classifier.model.layers[172:]:
-    #        layer.trainable = True
-
-    #classifier.model.compile(optimizer=SGD(lr=0.0001, momentum=0.9), loss='categorical_crossentropy',metrics=['accuracy'])        
-    
-    #classifier.fit(tg, vg, (len(train_indx), len(val_indx)))
 
     loss = classifier.evaluate(vg, len(val_indx))
 
@@ -173,7 +160,6 @@ def write_submission(csv_name, predictions, filenames):
         print("Done.")
 
 def optimize(max_evals, data=None, labels=None, train_indx=None, val_indx=None):
-    #space = CCN.space
     space = ResNet.space
     print('start optimization')
 
@@ -199,8 +185,6 @@ if __name__ == '__main__':
     global best
     global model
     best = np.inf
-
-    
 
     if sys.argv[1] == '-o':
         data, labels, train_indx, val_indx = data(False, True, False)

@@ -51,6 +51,10 @@ class Heatmap:
         #s = "n02626762"  # Imagenet code for "tuna"
         s = "n02536864"  # Imagenet code for "silver salmon" = 391
         self.pred_class = synset_to_dfs_ids(s)
+        s = "n01484850"  # Imagenet code for "white shark"
+        self.pred_class += synset_to_dfs_ids(s)
+        s = "n02514041"  # Imagenet code for "barracoute, snoek"
+        self.pred_class += synset_to_dfs_ids(s)
         
 
     def heatmap(self, img):
@@ -71,17 +75,3 @@ class Heatmap:
 
 
         return heatmap_orig, max_orig, prob_fish
-    #return None, None, None
-
-# start = time.time()
-# current_img = load_single_img("../../data/train/BET/img_00107.jpg",convert_bgr=True)
-#plt.imshow(current_img)
-#cv2.imshow('current',current_img)
-# h,m,p = heatmap(current_img)
-# print('Max',m)
-# print('Prob',p)
-# print(h.shape)
-# end = time.time()
-# print(end - start)
-# plt.imshow(h)
-# plt.show()

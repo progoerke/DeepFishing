@@ -13,9 +13,6 @@ ids = file["ids"]
 
 for i,img in enumerate(images):
 	c_img = img
-	# Does not work, why?
-	img[0,:,:] = c_img[2,:,:]
-	img[2,:,:] = c_img[0,:,:]
 	img = (img*255.0).astype(np.uint8)
 	name = (ids[i][0].decode("utf-8").split('/'))
 	print(name)

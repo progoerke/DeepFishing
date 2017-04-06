@@ -228,8 +228,6 @@ def visualize_cam(model, layer_idx, filter_indices,
     losses = [
         (ActivationMaximization(model.layers[layer_idx], filter_indices), 1)
     ]
-    #cv2.imshow('seed1',seed_img)
-    #seed_img = np.array(seed_img, dtype='uint8')
 
     penultimate_output = model.layers[penultimate_layer_idx].output
     opt = Optimizer(model.input, losses, wrt=penultimate_output)
@@ -238,22 +236,14 @@ def visualize_cam(model, layer_idx, filter_indices,
     # We are minimizing loss as opposed to maximizing output as with the paper.
     # So, negative gradients here mean that they reduce loss, maximizing class probability.
     grads *= -1
-    #print(grads.shape)
-    #grads = grads.transpose((2,1,0))
-    #grads = np.expand_dims(grads, axis=0)
-    #print(grads.shape)
-    # seed_img (224,224,3) uint8
-    # s_idx 0
-    # row_idx 1
-    # col_idx 2
-    # grads float32 1,7,7,512
+   
     # Average pooling across all feature maps.
     # This captures the importance of feature map (channel) idx to the output
     s_idx, c_idx, row_idx, col_idx = utils.get_img_indices()
     weights = np.mean(grads, axis=(s_idx, row_idx, col_idx))
 
     # Generate heatmap by computing weight * output over feature maps
-    #ch = 3
+    # ch = 3
     # s = None
     # rows = 224
     # cols = 224
@@ -271,22 +261,17 @@ def visualize_cam(model, layer_idx, filter_indices,
     heatmap /= np.max(heatmap)
     max_idx = np.unravel_index(np.argmax(heatmap), heatmap.shape)
     heatmap[max_idx[0]-5:max_idx[0]+5, max_idx[1]-5:max_idx[1]+5]=0.5
-    #heatmap[max_square]=255
+
     # Convert to heatmap and zero out low probabilities for a cleaner output.
     heatmap_colored = cv2.applyColorMap(np.uint8(heatmap*255), cv2.COLORMAP_JET)
     heatmap_colored[np.where(heatmap <= 0.2)] = 0
-    # print(heatmap_colored[max_idx])
-    # print('shape',heatmap_colored.shape)
-    # print('type',heatmap_colored.dtype)
-    # print('min',np.min(heatmap_colored))
-    # print('max',np.max(heatmap_colored))
+
     if overlay:
         heatmap_overlay = cv2.addWeighted(seed_img, 1, heatmap_colored, 0.5, 0)
     if text:
         cv2.putText(heatmap_colored, text, (10, 25), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 0, 0), 2)
+
     #cv2.imshow('seed',seed_img)
     #cv2.imshow('heat',heatmap_colored)
     #cv2.imshow('overlay',heatmap_overlay)
-    #cv2.imshow("tt", heatmap_colored)
-    #cv2.imshow("ts", heatmap_overlay)
     return heatmap_overlay, heatmap_colored, max_idx

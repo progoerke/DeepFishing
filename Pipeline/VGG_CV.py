@@ -107,7 +107,7 @@ def VGG_CV(data, data_labels, img_height = 400, img_width=400, n_clusts = 5, fol
                         if i == fold:
                             cv_data[int(instance)] = fold
 
-    # Save data to JSON
+    # Save data
     with open(cv_store, 'wb') as outfile:
         pickle.dump(cv_data, outfile)
 

@@ -20,6 +20,13 @@ def crop_around(img, x , y, centre_x= None ,centre_y= None):
         
     returns transformed image, new centre coords
      '''
+    if (x > img.shape[1] or y > img.shape[0]):
+        print('Crop size too large, returned empty image instead.')
+        if (len(img.shape) > 2):
+            return np.zeros((y,x,img.shape[2])), int(img.shape[1]/2),int(img.shape[0]/2)
+        else:
+            return np.zeros((y,x)), int(img.shape[1]/2),int(img.shape[0]/2)
+     
     tx =int(x/2)   #using 1/2 of the eventual image size is easier in the end...
     ty =int(y/2) 
     

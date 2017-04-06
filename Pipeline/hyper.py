@@ -129,16 +129,16 @@ def run_model(params=None, m=None, data=None, labels=None, train_indx=None, val_
     tg = train_generator(data, labels, train_indx, classifier.batch_size)
     vg = train_generator(data, labels, val_indx, classifier.batch_size)
 
-    classifier.fit(tg, vg, (len(train_indx), len(val_indx)))
+    classifier.fit(tg, vg, (500,100))#(len(train_indx), len(val_indx)))
 
-    for layer in classifier.model.layers[:172]:
-            layer.trainable = False
-    for layer in classifier.model.layers[172:]:
-            layer.trainable = True
+    #for layer in classifier.model.layers[:172]:
+    #        layer.trainable = False
+    #for layer in classifier.model.layers[172:]:
+    #        layer.trainable = True
 
-    classifier.model.compile(optimizer=SGD(lr=0.0001, momentum=0.9), loss='categorical_crossentropy',metrics=['accuracy'])        
+    #classifier.model.compile(optimizer=SGD(lr=0.0001, momentum=0.9), loss='categorical_crossentropy',metrics=['accuracy'])        
     
-    classifier.fit(tg, vg, (len(train_indx), len(val_indx)))
+    #classifier.fit(tg, vg, (len(train_indx), len(val_indx)))
 
     loss = classifier.evaluate(vg, len(val_indx))
 

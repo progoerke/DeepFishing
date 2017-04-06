@@ -163,6 +163,7 @@ def load_test(use_cached=True,filepath='test_mat.hdf5',directories = 'data/test_
 
 def load_train(use_cached=True,filepath='train_mat.hdf5',crop_rows=400,crop_cols=400,no=3777,mode="resize"):
     fish = ['ALB','BET','DOL','LAG','NoF','OTHER','SHARK','YFT']
+    blurr = False
     #fish = ['ALB','DOL','LAG']
     directories = "data/train"               #location of 'train'
     #subdirs = listdir(directories)[1::]
@@ -179,21 +180,22 @@ def load_train(use_cached=True,filepath='train_mat.hdf5',crop_rows=400,crop_cols
         targets = file.create_dataset("targets", (num_total_images, 8), chunks=(no_chunks, 8), dtype='int32')
         ids = file.create_dataset("ids", (num_total_images,1), chunks=(no_chunks,1), dtype=dt)
         crop_idx = file.create_dataset("crop_idx", (num_total_images,6), chunks=(no_chunks,1), dtype='int32')
-
-        # Loading the boat cluster labels and average images
-        ncluster = 22
-        imgs_averages = [None] * ncluster
-        y = np.loadtxt('./data/train/Boat_clusters_553/img_labels_y.txt')
-        f = open('./data/train/Boat_clusters_553/img_file_names.json', 'r')
-        all_file_names = json.load(f)
-        f.close
-        y = y.astype(int)
-        for i in range(len(imgs_averages)):
-            imgs_averages[i] = io.imread('./data/train/Boat_clusters_553/imgs_averages_' + str(i) + '.jpg')
-        y_file_names=[y, all_file_names]
-        cluster_size = np.zeros((np.max(y) + 1, 1), dtype=int)
-        for icluster in range(np.max(y) + 1):
-            cluster_size[icluster] = np.sum(y == icluster)
+    
+        if blurr:
+            # Loading the boat cluster labels and average images
+            ncluster = 22
+            imgs_averages = [None] * ncluster
+            y = np.loadtxt('./data/train/Boat_clusters_553/img_labels_y.txt')
+            f = open('./data/train/Boat_clusters_553/img_file_names.json', 'r')
+            all_file_names = json.load(f)
+            f.close
+            y = y.astype(int)
+            for i in range(len(imgs_averages)):
+                imgs_averages[i] = io.imread('./data/train/Boat_clusters_553/imgs_averages_' + str(i) + '.jpg')
+                y_file_names=[y, all_file_names]
+                cluster_size = np.zeros((np.max(y) + 1, 1), dtype=int)
+            for icluster in range(np.max(y) + 1):
+                    cluster_size[icluster] = np.sum(y == icluster)
 
         print('Read train images')
         total = 0
@@ -318,8 +320,7 @@ def load_train(use_cached=True,filepath='train_mat.hdf5',crop_rows=400,crop_cols
                     ids[total] = directories+"/"+d+"/"+f
 
                     total += 1
-        file.flush()
-
+            file.flush()
     else:
         print('load from hdf5 file')
         file = h5py.File(filepath, "r")

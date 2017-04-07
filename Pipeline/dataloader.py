@@ -163,10 +163,12 @@ def load_test(use_cached=True,filepath='test_mat.hdf5',directories = 'data/test_
 
 def load_train(use_cached=True,filepath='train_mat.hdf5',crop_rows=400,crop_cols=400,no=3777,mode="resize"):
     fish = ['ALB','BET','DOL','LAG','NoF','OTHER','SHARK','YFT']
+    blur = False
     #fish = ['ALB','DOL','LAG']
     directories = "data/train"               #location of 'train'
     #subdirs = listdir(directories)[1::]
     #print(subdirs)
+    
 
     num_total_images = no
     if use_cached is False:
@@ -180,19 +182,20 @@ def load_train(use_cached=True,filepath='train_mat.hdf5',crop_rows=400,crop_cols
         ids = file.create_dataset("ids", (num_total_images,1), chunks=(no_chunks,1), dtype=dt)
         crop_idx = file.create_dataset("crop_idx", (num_total_images,6), chunks=(no_chunks,1), dtype='int32')
 
-        # Loading the boat cluster labels and average images
-        ncluster = 22
-        imgs_averages = [None] * ncluster
-        y = np.loadtxt('./data/train/Boat_clusters_553/img_labels_y.txt')
-        f = open('./data/train/Boat_clusters_553/img_file_names.json', 'r')
-        all_file_names = json.load(f)
-        f.close
-        y = y.astype(int)
-        for i in range(len(imgs_averages)):
+        if blur:
+          # Loading the boat cluster labels and average images
+          ncluster = 22
+          imgs_averages = [None] * ncluster
+          y = np.loadtxt('./data/train/Boat_clusters_553/img_labels_y.txt')
+          f = open('./data/train/Boat_clusters_553/img_file_names.json', 'r')
+          all_file_names = json.load(f)
+          f.close
+          y = y.astype(int)
+          for i in range(len(imgs_averages)):
             imgs_averages[i] = io.imread('./data/train/Boat_clusters_553/imgs_averages_' + str(i) + '.jpg')
-        y_file_names=[y, all_file_names]
-        cluster_size = np.zeros((np.max(y) + 1, 1), dtype=int)
-        for icluster in range(np.max(y) + 1):
+          y_file_names=[y, all_file_names]
+          cluster_size = np.zeros((np.max(y) + 1, 1), dtype=int)
+          for icluster in range(np.max(y) + 1):
             cluster_size[icluster] = np.sum(y == icluster)
 
         print('Read train images')
@@ -216,9 +219,10 @@ def load_train(use_cached=True,filepath='train_mat.hdf5',crop_rows=400,crop_cols
                 if not(f == '.DS_Store'):
                     current_img = load_single_img(directories+"/"+d+"/"+f,convert_bgr=True)
 
-                    # Blurring the boat
-                    icluster = y_file_names[0][y_file_names[1].index("./"+directories+"/"+d+"\\"+f)]
-                    if cluster_size[icluster] > 3 and icluster>0:
+                    if blur:
+                      # Blurring the boat
+                      icluster = y_file_names[0][y_file_names[1].index("./"+directories+"/"+d+"\\"+f)]
+                      if cluster_size[icluster] > 3 and icluster>0:
                         current_img = blurBoat(icluster, current_img, imgs_averages, maxblur=1.0)
                     #else:
                     #    current_img = img
@@ -237,7 +241,7 @@ def load_train(use_cached=True,filepath='train_mat.hdf5',crop_rows=400,crop_cols
                                     best_img=sliding_img
                                     best_i0=i0
                                     best_i1=i1
-                        _, heatmap_overlay, best_max_idx, prob = h.heatmap(best_img)
+                        heatmap_overlay, best_max_idx, prob = h.heatmap(best_img)
                         io.imsave(directories+"/hm_"+d+"/"+f, heatmap_overlay)
                         max_idx=[best_i0*stride+best_max_idx[0], best_i1*stride+best_max_idx[1]]
                         #print("heatmap max_idx: ", max_idx)
@@ -331,3 +335,8 @@ def load_train(use_cached=True,filepath='train_mat.hdf5',crop_rows=400,crop_cols
 
     sys.stdout.write('\n Doooone :)\n')
     return images, targets, ids, crop_idx
+
+
+if __name__=='__main__':
+  load_train(filepath='train_heat.hdf5', use_cached=False, mode='use_heatmap_sliding')
+  load_test(filepath='test_heat.hdf5', use_cached=False, mode='use_heatmap_sliding')

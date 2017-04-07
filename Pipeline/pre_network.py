@@ -75,10 +75,10 @@ class Pre_Network:
         print("Loaded model from disk")
 
     def extract_patches(self,imgs, msks=None, patch_size=101,stride=50):
-        with tf.Session() as sess:    
-            patch_arr = tf.extract_image_patches(imgs, ksizes=[1, patch_size, patch_size, 1], strides=[1, stride, stride, 1], rates=[1, 1, 1, 1], padding='SAME').eval()
-            dims = patch_arr.shape
-            patch_arr = np.reshape(patch_arr,(dims[0]*dims[1]*dims[2],patch_size,patch_size,3))
+        with tf.Graph().as_default(), tf.Session() as sess:  
+          patch_arr = tf.extract_image_patches(imgs, ksizes=[1, patch_size, patch_size, 1], strides=[1, stride, stride, 1], rates=[1, 1, 1, 1], padding='SAME').eval()
+          dims = patch_arr.shape
+          patch_arr = np.reshape(patch_arr,(dims[0]*dims[1]*dims[2],patch_size,patch_size,3))
 
         labels = np.zeros((len(patch_arr),1,1,2))    
         if msks is not None: 
@@ -86,7 +86,7 @@ class Pre_Network:
           for idx,p in enumerate(imgs):
               for i in range(dims[1]):
                   for j in range(dims[2]):
-                      if np.sum(msks[idx,(i-1)*stride:(i+1)*stride,(j-1)*stride:(j+1)*stride]) >= 1000:
+                      if np.sum(msks[idx,(i-1)*stride:(i+1)*stride,(j-1)*stride:(j+1)*stride]) >= 2000:
                           labels[total,:,:,1] = 1
                       else:
                           labels[total,:,:,0] = 1
@@ -101,7 +101,9 @@ class Pre_Network:
               imgs = self.train_images[batch:batch+batch_size]
               msks = self.masks[batch:batch+batch_size]
               img_patches, patch_labels = self.extract_patches(imgs, msks)
-              loss = self.new_model.train_on_batch(img_patches, patch_labels)
+              weights = np.ones(len(img_patches))
+              weights[np.where(patch_labels[...,1] == 1)[0]] = 30
+              loss = self.new_model.train_on_batch(img_patches, patch_labels, sample_weight=weights)
               print('epoch {}: loss = {}'.format(epoch,loss))
 
         # serialize model to JSON
@@ -115,8 +117,8 @@ class Pre_Network:
     def predict(self,X_test):
       img_patches,_ = self.extract_patches(X_test)
       prediction = self.new_model.predict_on_batch(img_patches)
-      pos_patches = img_patches[prediction.squeeze()[...,1] == 1,:,:,:]  
+      pos_patches = img_patches[np.argmax(prediction.squeeze(),axis=1) == 1,:,:,:]  
       if len(pos_patches)== 0:
-        pos_patches = img_patches[prediction.squeeze()[...,1] == 0,:,:,:]
+        pos_patches = img_patches[np.argmax(prediction.squeeze(),axis=1) == 0,:,:,:]  
       
       return pos_patches

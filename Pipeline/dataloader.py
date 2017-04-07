@@ -20,7 +20,7 @@ from imgloader import load_single_img
 from keras.preprocessing.image import img_to_array
 import json
 
-def load_test(use_cached=True,filepath='test_mat.hdf5',directories = 'data/test_stg1', crop_rows=400,crop_cols=400,no=1000,mode="resize"):
+def load_test(use_cached=True,filepath='data/test_mat.hdf5',directories = 'data/test_stg1', crop_rows=400,crop_cols=400,no=1000,mode="resize"):
     #directories = "data/test_stg1"
 
     #hm_directories = directories.replace('/test/', '/test/hm_') # heatmap directory
@@ -161,11 +161,11 @@ def load_test(use_cached=True,filepath='test_mat.hdf5',directories = 'data/test_
     sys.stdout.write('\n Doooone :)\n')
     return images, ids, crop_idx
 
-def load_train(use_cached=True,filepath='train_mat.hdf5',crop_rows=400,crop_cols=400,no=3777,mode="resize"):
+def load_train(use_cached=True,filepath='train_mat.hdf5',directories='data/train',crop_rows=400,crop_cols=400,no=3777,mode="resize"):
     fish = ['ALB','BET','DOL','LAG','NoF','OTHER','SHARK','YFT']
     blur = False
     #fish = ['ALB','DOL','LAG']
-    directories = "data/train"               #location of 'train'
+    #directories = "data/train"               #location of 'train'
     #subdirs = listdir(directories)[1::]
     #print(subdirs)
     
@@ -337,5 +337,6 @@ def load_train(use_cached=True,filepath='train_mat.hdf5',crop_rows=400,crop_cols
 
 
 if __name__=='__main__':
-  load_train(filepath='train_heat.hdf5', use_cached=False, mode='use_heatmap_sliding')
-  load_test(filepath='test_heat.hdf5', use_cached=False, mode='use_heatmap_sliding')
+  #load_train(filepath='train_heat.hdf5', use_cached=False, mode='use_heatmap_sliding')
+  load_test(use_cached=False,mode='resize')
+  #load_test(filepath='test_heat.hdf5', use_cached=False, mode='use_heatmap_sliding')

@@ -54,7 +54,7 @@ phase = 'training' # training or testing
 if phase == 'training':
     # For relabelling the training data load the lists of filenames and boatIDs
     y = np.loadtxt('../Pipeline/BoatIDs/img_labels_y.txt')
-    f = open('../Pipeline/BoatIDs/img_file_names_lisa.json', 'r')
+    f = open('../Pipeline/BoatIDs/img_file_names_unix.json', 'r')
     file_names = json.load(f)
     f.close
     y = y.astype(int)

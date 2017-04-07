@@ -53,24 +53,25 @@ phase = 'training' # training or testing
 
 if phase == 'training':
     # For relabelling the training data load the lists of filenames and boatIDs
-    y = np.loadtxt('./data/train_all/Boat_clusters_all/img_labels_y.txt')
-    f = open('./data/train_all/Boat_clusters_all/img_file_names.json', 'r')
+    y = np.loadtxt('../Pipeline/BoatIDs/img_labels_y.txt')
+    f = open('../Pipeline/BoatIDs/img_file_names_lisa.json', 'r')
     file_names = json.load(f)
     f.close
     y = y.astype(int)
     y_file_names=[y, file_names]
 else:
     # For testing data data, only list of filenames
-    file_names=glob.glob('./data/test_stg1/*.jpg')
+    file_names=glob.glob('/../Pipeline/data/test_stg1/*.jpg')
 
 # Read average images for each cluster
 ncluster = 120
 imgs_averages = [None] * ncluster
 
 for i in range(len(imgs_averages)):
-    imgs_averages[i] = io.imread('./data/train_all/Boat_clusters_all/imgs_averages_' + str(i) + '.jpg')
+    imgs_averages[i] = io.imread('../Pipeline/BoatIDs/imgs_averages_' + str(i) + '.jpg')
 
 for f in file_names:
+    print(f)
     img = cv2.imread(f)
     img = np.squeeze(img_to_array(img))
     icluster = labelBoat(img, imgs_averages)

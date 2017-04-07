@@ -82,31 +82,12 @@ class Inception(Classifier_base):
                       metrics=["accuracy"])
         return model
 
-    '''
-    Create weights for inbalanced classes
-    @param labels_dict: number of samples per label
-    @param mu: weighting
-    '''
-    def create_class_weight(self, labels_dict, mu=0.15):
-        values = np.fromiter(iter(labels_dict.values()), dtype=float)
-        total = np.sum(values)
-        keys = labels_dict.keys()
-        self.class_weight = dict()
-
-        print(values)
-        for key in keys:
-            score = log(mu*total/float(values[key]))
-            self.class_weight[key] = score if score > 1.0 else 1.0
-
-
     def fit(self, train_generator, validation_generator, split):
 
         early = EarlyStopping(monitor='val_loss', min_delta=0, patience=5, verbose=0, mode='auto')
 
-        if not self.class_weight:
-            self.class_weight = 'auto'
+        self.model.fit_generator(train_generator, steps_per_epoch=split[0]//self.batch_size, validation_data=validation_generator, validation_steps=split[1]//self.batch_size, callbacks=[early], epochs = self.nb_epoch, verbose = 1)
 
-        self.model.fit_generator(train_generator, steps_per_epoch=split[0]//self.batch_size, validation_data=validation_generator, validation_steps=split[1]//self.batch_size, callbacks=[early], epochs = self.nb_epoch, verbose = 1, class_weight = self.class_weight)
 
     def predict(self, X_test):
         return self.model.predict(X_test, batch_size = self.batch_size, verbose = 1)

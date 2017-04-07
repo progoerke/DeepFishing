@@ -181,7 +181,7 @@ def load_train(use_cached=True,filepath='train_mat.hdf5',crop_rows=400,crop_cols
         targets = file.create_dataset("targets", (num_total_images, 8), chunks=(no_chunks, 8), dtype='int32')
         ids = file.create_dataset("ids", (num_total_images,1), chunks=(no_chunks,1), dtype=dt)
         crop_idx = file.create_dataset("crop_idx", (num_total_images,6), chunks=(no_chunks,1), dtype='int32')
-
+        
         if blur:
           # Loading the boat cluster labels and average images
           ncluster = 22
@@ -322,8 +322,7 @@ def load_train(use_cached=True,filepath='train_mat.hdf5',crop_rows=400,crop_cols
                     ids[total] = directories+"/"+d+"/"+f
 
                     total += 1
-        file.flush()
-
+            file.flush()
     else:
         print('load from hdf5 file')
         file = h5py.File(filepath, "r")

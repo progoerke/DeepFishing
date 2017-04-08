@@ -168,6 +168,9 @@ def write_submission(csv_name, predictions, filenames):
         for i, image_name in enumerate(filenames):
             pred = ['%.6f' % p for p in preds[i, :]]
             f.write('%s,%s\n' % (os.path.basename(str(image_name[0],'utf-8')), ','.join(pred)))
+        for i in range(1,12154):
+            pred = ['%.6f' % p for p in 8 * [1/8]]
+            f.write('%s,%s\n' % ('test_stg2/image_%.5d.jpg' % i, ','.join(pred)))
         print("Done.")
 
 def optimize(max_evals, data=None, labels=None, train_indx=None, val_indx=None):
@@ -213,8 +216,8 @@ if __name__ == '__main__':
         model.compile(loss='categorical_crossentropy',
                       optimizer='sgd',
                       metrics=["accuracy"])
-        p = model.evaluate(data[val_indx[:100]], labels[val_indx[:100]])
-        print(p)
+        #p = model.evaluate(data[val_indx[:100]], labels[val_indx[:100]])
+        #print(p)
         #run_model(m=model,data=data, labels=labels,train_indx=train_indx,val_indx=val_indx)
     
     test, filenames, _ = dataloader.load_test(filepath='data/test.hdf5',directories='data/test_stg1', use_cached=True, mode="resize")

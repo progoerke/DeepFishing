@@ -32,7 +32,7 @@ Load data and split into partitions for cross validation
 def data(load=False, use_cached=True, use_heatmap=True):
     
     cval_splits = 5
-    data, labels, _, _ = dataloader.load_train(filepath='data/train.hdf5',directories='data/train',use_cached=use_cached, mode="resize")
+    data, labels, _, _ = dataloader.load_train(filepath='data/train_mat.hdf5',directories='data/train',use_cached=use_cached, mode="resize")
     print('loaded images')
     print('start cross validation')
     cval_indx = CV.VGG_CV(data, labels, folds=cval_splits, use_cached=use_cached)
@@ -187,7 +187,7 @@ if __name__ == '__main__':
     best = np.inf
 
     if sys.argv[1] == '-o':
-        data, labels, train_indx, val_indx = data(False, True, False)
+        data, labels, train_indx, val_indx = data(False, False, False)
         max_evals = int(sys.argv[2])
         optimize(max_evals,data=data, labels=labels,train_indx=train_indx,val_indx=val_indx)
     elif sys.argv[1] == '-r':

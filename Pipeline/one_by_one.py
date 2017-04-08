@@ -1,24 +1,30 @@
 import dataloader
 import numpy as np
+import hyper
+
+from Classifiers.inceptionV3 import Inception
 
 if __name__ == '__main__':
-		
-	data, labels, train_indx, val_indx = dataloader.load_train(filepath='data/train_mat.hdf5',use_cached=False, mode='resize')
+        
+    data, labels, _, _ = dataloader.load_train(filepath='data/train.hdf5',use_cached=True, mode='resize')
 
-	num_classes = 8
-	for c in range(num_classes):
-		ids_class = np.where(labels[:,c] == 1)[0]
-		# the conversion to list of the numpy array of indeces is because hdf5 support only lists or boolean arrays for indexing
-		#data_single_class = data[ids_class.tolist()]
-		#label_single_class = labels[ids_class.tolist()]
-		#n_val_samples = ids_class * 10 // 100
-		#val_idx = np.random.choice(ids_class, n_val_samples, replace=False)
-		#train_idx = np.setdiff1d(ids_class, val_idx)
-		np.random.shuffle(ids_class)
-		num_val = int(0.1 * len(ids_class)) 
-		val_indx = ids_class[:num_val]
-		train_indx = ids_class[num_val:]        
 
-		run_model((0.166,64,'sgd'), data=data, labels=labels, train_indx=train_indx, val_indx=val_indx)  
+    num_val = int(0.1 * len(data)) 
+    num_classes = 8
+    for c in range(7,num_classes):
+
+        new_labels = np.zeros((len(labels),2))
+        ids_class = np.where(labels[:,c] == 1,True,False)
+            
+        new_labels[ids_class,1] = 1 
+        new_labels[~ids_class,0] = 1
+
+        indx = np.arange(len(data))
+        np.random.shuffle(indx)
+        val_indx = indx[:num_val]
+        train_indx = indx[num_val:]        
+        
+        classifier = Inception((data[0].shape[0],data[0].shape[1]),2,50,0.166,64,'sgd')
+        hyper.run_model(m=classifier, data=data, labels=new_labels, train_indx=train_indx, val_indx=val_indx, name='class_{}'.format(c))  
 
         

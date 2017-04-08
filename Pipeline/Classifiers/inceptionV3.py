@@ -93,6 +93,6 @@ class Inception(Classifier_base):
         return self.model.predict(X_test, batch_size = self.batch_size, verbose = 1)
 
     def evaluate(self, validation_generator, split):
-        
-        score = self.model.evaluate_generator(validation_generator, steps=split//self.batch_size)    
+        steps = split // self.batch_size or 1
+        score = self.model.evaluate_generator(validation_generator, steps=steps, workers=1)    
         return score[0] 

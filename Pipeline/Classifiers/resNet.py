@@ -81,22 +81,6 @@ class ResNet(Classifier_base):
                       metrics=["accuracy"])
         return model
 
-    '''
-    Create weights for inbalanced classes
-    @param labels_dict: number of samples per label
-    @param mu: weighting
-    '''
-    def create_class_weight(self, labels_dict, mu=0.15):
-        values = np.fromiter(iter(labels_dict.values()), dtype=float)
-        total = np.sum(values)
-        keys = labels_dict.keys()
-        self.class_weight = dict()
-
-        print(values)
-        for key in keys:
-            score = log(mu*total/float(values[key]))
-            self.class_weight[key] = score if score > 1.0 else 1.0
-
 
     def fit(self, train_generator, validation_generator, split):
 

@@ -73,7 +73,7 @@ def load_test(use_cached=True,filepath='data/test_mat.hdf5',directories = 'data/
                                 best_img = sliding_img
                                 best_i0 = i0
                                 best_i1 = i1
-                    _, heatmap_overlay, best_max_idx, prob = h.heatmap(best_img)
+                    heatmap_overlay, best_max_idx, prob = h.heatmap(best_img)
                     #io.imsave(directories.replace('/test/', '/test/hm_') + "/" + f, heatmap_overlay)
                     max_idx = [best_i0 * stride + best_max_idx[0], best_i1 * stride + best_max_idx[1]]
                     print("heatmap max_idx: ", max_idx)
@@ -336,4 +336,4 @@ def load_train(use_cached=True,filepath='train_mat.hdf5',directories='data/train
 
 if __name__=='__main__':
   #load_train(filepath='train_heat.hdf5', use_cached=False, mode='use_heatmap_sliding')
-  load_test(filepath='test_heat.hdf5', use_cached=False, mode='use_heatmap_sliding')
+  load_test(filepath='test_big.hdf5', directories='data/test_stg2', use_cached=False, mode='resize')

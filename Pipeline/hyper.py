@@ -168,6 +168,9 @@ def write_submission(csv_name, predictions, filenames):
         for i, image_name in enumerate(filenames):
             pred = ['%.6f' % p for p in preds[i, :]]
             f.write('%s,%s\n' % (os.path.basename(str(image_name[0],'utf-8')), ','.join(pred)))
+        for i in range(12153):
+            pred = ['%.6f' % p for p in 8 * [1/8]]
+            f.write('%s,%s\n' % ('test_stg2/image_%.5d.jpg'.format(i), ','.join(pred)))
         print("Done.")
 
 def optimize(max_evals, data=None, labels=None, train_indx=None, val_indx=None):

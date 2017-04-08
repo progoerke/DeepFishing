@@ -187,13 +187,14 @@ if __name__ == '__main__':
     best = np.inf
 
     if sys.argv[1] == '-o':
-        data, labels, train_indx, val_indx = data(False, False, False)
+        data, labels, train_indx, val_indx = data(False, True, False)
         max_evals = int(sys.argv[2])
         optimize(max_evals,data=data, labels=labels,train_indx=train_indx,val_indx=val_indx)
     elif sys.argv[1] == '-r':
         data, labels, train_indx, val_indx = data(False, True, False)
-        params = pickle.load(open('models/{}.pkl'.format('resnet_loss-0.3928944135109009'),'rb'))
-        run_model((params['lr'],64,'sgd'),data=data, labels=labels,train_indx=train_indx,val_indx=val_indx)        
+        #params = pickle.load(open('models/{}.pkl'.format('resnet_loss-0.3928944135109009'),'rb'))
+        run_model((0.00037,16,'sgd'),data=data, labels=labels,train_indx=train_indx,val_indx=val_indx)        
+        #run_model((params['lr'],64,'sgd'),data=data, labels=labels,train_indx=train_indx,val_indx=val_indx)        
     else:
         name = sys.argv[1]
         data, labels, train_indx, val_indx = data(True, True, False)

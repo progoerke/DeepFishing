@@ -16,7 +16,7 @@ import heatmap_VisCAM
 import dataloader
 import VGG_CV as CV
 
-from keras.models import load_model
+from keras.models import load_model, model_from_json
 from keras.preprocessing.image import ImageDataGenerator
 
 #Insert your class here
@@ -31,7 +31,7 @@ Load data and split into partitions for cross validation
 def data(load=False, use_cached=True, use_heatmap=True):
     
     cval_splits = 5
-    data, labels, _, _ = dataloader.load_train(filepath='/work/kstandvoss/train_mat_heat.hdf5',directories='data/train',use_cached=use_cached, mode="resize")
+    data, labels, _, _ = dataloader.load_train(filepath='data/train.hdf5',directories='data/train',use_cached=use_cached, mode="resize")
     print('loaded images')
     print('start cross validation')
     cval_indx = CV.VGG_CV(data, labels, folds=cval_splits, use_cached=True)
@@ -211,14 +211,14 @@ if __name__ == '__main__':
     else:
         name = sys.argv[1]
         data, labels, train_indx, val_indx = data(True, True, False)
-        params = pickle.load(open('models/{}.pkl'.format(name),'rb'))
-        model = Inception((data[0].shape[0], data[0].shape[1]),8,100,lr=1e-4,batch_size=64, optimizer='sgd')
-        model.model.load_weights('models/{}.h5'.format(name))
-
-        model.model.compile(loss='categorical_crossentropy',
-                      optimizer=model.optimizer,
+        model = model_from_json(open('model_json/{}.json'.format(name),'r').read())
+        model.load_weights('models/{}.h5'.format(name))
+        model.compile(loss='categorical_crossentropy',
+                      optimizer='sgd',
                       metrics=["accuracy"])
-        run_model(m=model,data=data, labels=labels,train_indx=train_indx,val_indx=val_indx)
+        p = model.evaluate(data[val_indx[:100]], labels[val_indx[:100]])
+        print(p)
+        #run_model(m=model,data=data, labels=labels,train_indx=train_indx,val_indx=val_indx)
     
     test, filenames, _ = dataloader.load_test(filepath='data/test.hdf5',directories='data/test_stg1', use_cached=True, mode="resize")
     print(filenames) 

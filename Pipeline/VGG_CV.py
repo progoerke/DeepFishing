@@ -40,10 +40,7 @@ def preprocess_image(img):
 # seed  Seed for the random generator.
 #
 # Outputs list of tuples [index - fold]
-def VGG_CV(data, data_labels, img_height = 400, img_width=400, n_clusts = 5, folds = 5, use_cached=False, path_cached='./cv_data.pkl'):
-
-    # Path where the CV data will be stored
-    cv_store = './cv_data.pkl'
+def VGG_CV(data, data_labels, img_height = 400, img_width=400, n_clusts = 5, folds = 5, use_cached=True, path_cached='data/cv_data.pkl'):
 
     if use_cached:
         with open(path_cached, 'rb') as data_file:
@@ -108,7 +105,7 @@ def VGG_CV(data, data_labels, img_height = 400, img_width=400, n_clusts = 5, fol
                             cv_data[int(instance)] = fold
 
     # Save data
-    with open(cv_store, 'wb') as outfile:
+    with open(path_cached, 'wb') as outfile:
         pickle.dump(cv_data, outfile)
 
     return cv_data

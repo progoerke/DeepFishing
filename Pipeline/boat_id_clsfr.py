@@ -6,7 +6,7 @@ import h5py
 from skimage import io
 import cv2
 from keras.preprocessing.image import img_to_array
-
+import glob
 
 class_dict = {'ALB':0,'BET':1,'DOL':2,'LAG':3,'NoF':4,'OTHER':5,'SHARK':6,'YFT':7}
 
@@ -70,7 +70,7 @@ def getFileName(filename):
 
 # ## TEST ##
 # # For testing data data, only list of filenames
-file_names=glob.glob('/../Pipeline/data/test_stg1/*.jpg')
+file_names=glob.glob('data/test_stg1/*.jpg')
 # # Read average images for each cluster
 
 num_total_images = 1000
@@ -101,10 +101,10 @@ for idx,f in enumerate(file_names):
     icluster = labelBoat(img, imgs_averages)
     cluster[idx] = icluster
     ids[idx] = getFileName(f)
+    if ((idx%10)==0):
+        sys.stdout.write(".")
+        sys.stdout.flush()
     if ((idx%100)==0):
-	sys.stdout.write(".")
-	sys.stdout.flush()
-    if ((idx%1300)==0):
-	sys.stdout.write("\n")
-	sys.stdout.flush()
+        sys.stdout.write("\n")
+        sys.stdout.flush()
     file.flush()

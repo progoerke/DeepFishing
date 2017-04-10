@@ -4,7 +4,7 @@ import pickle
 import numpy as np
 from Classifiers.inceptionV3 import Inception
 
-from keras.models import Sequential, Model
+from keras.models import Sequential, Model, model_from_json
 from keras.layers.core import Dense
 from keras.callbacks import ModelCheckpoint
 
@@ -16,8 +16,8 @@ def create_predictions(modellist):
     pickle.dump(train_filenames[:],open('predictions/train_filenames.pkl','wb'))
     for m in modellist:
         
-        model = Inception((train[0].shape[0], train[0].shape[1]),8,100,lr=1e-4,batch_size=64, optimizer='sgd')
-        model.model.load_weights('models/{}.h5'.format(m))
+        model = model_from_json(open('model_json/{}.json'.format(m),'r').read())
+        model.load_weights('models/{}.h5'.format(m))
 
         preds = model.predict(test)
         pickle.dump(preds,open('predictions/test_{}.pkl'.format(m),'wb'))
@@ -86,9 +86,9 @@ def get_test_predictions(modellist, mode='mean'):
 
 if __name__ == '__main__':
 
-    modellist = ['class_0-1.1920930376163597e-07','class_1-1.1920930376163597e-07','class_2-1.1920930376163597e-07','class_3-1.1920930376163597e-07','class_4-1.1920930376163597e-07','class_5-1.1920930376163597e-07','class_6-1.1920930376163597e-07','class_7-1.1920930376163597e-07']
+    modellist = ['boat_id','resnet_loss-1.4480618794978652']
     #create_predictions(modellist)
     #train_ensemble(modellist)
-    get_test_predictions(modellist, mode='max')
+    get_test_predictions(modellist, mode='mean')
 
     

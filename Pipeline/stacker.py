@@ -24,26 +24,29 @@ from keras.layers import AveragePooling2D
 from keras.models import Model
 from keras.applications import InceptionV3
 from keras import optimizers
-from keras.layers.core import Dense, Activation, Merge
+
+from keras.layers.core import Dense
+from keras.layers import Input, concatenate
 
 ###################################################################################
 ###################################################################################
 
 class Stacking(object):
-    def __init__(self, n_folds, stacker_args, base_models_args):
+
+    def __init__(self, n_folds, stacker_args, base_models_args, n_classes):
         self.n_folds = n_folds
         self.stacker_args = stacker_args
         self.base_models_args = base_models_args[:n_folds]
-        self.n_classes = 8
+        self.n_classes = n_classes
 
-    def fit_predict(self, data, labels, cval_indx ,test):
+    def fit_predict(self, data, labels, cval_indx, test):
 
         s_train = np.zeros((data.shape[0], len(self.base_models_args)*self.n_classes))
         s_test = np.zeros((test.shape[0], len(self.base_models_args)*self.n_classes))
         print(len(self.base_models_args))
         for i in range(len(self.base_models_args)):
             print("Training model {}/{}".format(i, len(self.base_models_args)))
-            s_test_i = np.zeros((self.n_folds, test.shape[0], 8))
+            s_test_i = np.zeros((self.n_folds, test.shape[0], self.n_classes))
             for j in range(self.n_folds):
                 print("Training without fold ̣{}".format(j))
                 # Divide training and validation
@@ -56,7 +59,7 @@ class Stacking(object):
                 val_indx.sort()
                 # Load the model
                 print("Loading model...")
-                base_model = self.load_base_model(self.base_models_args[i])
+                base_model = self.load_model(self.base_models_args[i], data[0].shape[:2])
                 # Train
                 print("Training model...")
                 model = self.train_base_model(classifier_name = self.base_models_args[i][0], classifier=base_model,
@@ -70,7 +73,7 @@ class Stacking(object):
 
             # Average test predictions
             tmp = np.mean( np.array(s_test_i), axis=0 )
-            s_test[:, i*self.n_classes:i*self.n_classes+8] = tmp
+            s_test[:, i*self.n_classes:i*self.n_classes + self.n_classes] = tmp
 
         # Save train and test set for the stacker
         s_train = np.savetxt('data/train_stacker.csv')
@@ -79,32 +82,32 @@ class Stacking(object):
         # Create stacker
         print("Training stacker model...")
         # OPTION 1 Neural net
-        stacker = self.load_stacker_s()
-        stacker = self.train_stacker_s(stacker, s_train, labels)
+        # stacker = self.load_stacker_s()
+        # stacker = self.train_stacker_s(stacker, s_train, labels)
         # OPTION 2 Simple logistic regression
         # stacker = LogisticRegression(multi_class='multinomial', class_weight='balanced')
         # cross_val_score(stacker,s_train[:-1],s_train[-1],cv=10)
         # stacker.fit(s_train[:-1],s_train[-1])
+        # OPTION 3 Convolutional net with metadata
+        stacker = self.load_stacker_c(self.stacker_args, data[0].shape[:2])
+        stacker = self.train_stacker_c(stacker, data, s_train, labels)
 
         print("Making the final predictions...")
         y_pred = stacker.predict(s_test)
 
-        # OPTION 3
-        stacker = self.load_stacker_c(data[0].shape)
-        stacker = self.train_stacker_c(stacker, data, s_train, labels)
-
         return y_pred
 
-    def load_base_model(self, args):
+    def load_model(self, args, input_size):
         name = args.pop(0)
         if name == 'inception':
-            return Inception((data[0].shape[0], data[0].shape[1]), 8, 50, *args)
+            return Inception(input_size, 8, 50, *args)
         elif name == 'resnet':
-            return ResNet((data[0].shape[0], data[0].shape[1]), 8, 50, *args)
+            return ResNet(input_size, 8, 50, *args)
         elif name == 'vgg':
-            return VGG_16((data[0].shape[0], data[0].shape[1]), 8, 50, *args)
+            return VGG_16(input_size, 8, 50, *args)
         elif name == 'ccn':
-            return CCN((data[0].shape[0], data[0].shape[1]), 8, 50, *args)
+            return CCN(input_size, 8, 50, *args)
+        return []
 
 
     def train_base_model(self, classifier_name=None, classifier=None, val_fold=None, data=None, labels=None, train_indx=None, val_indx=None):
@@ -131,37 +134,42 @@ class Stacking(object):
         print(model.summary())
         return model
 
-    def load_stacker_c(self, input_size):
+    def load_stacker_c(self, stacker_args, input_size):
 
         # Image model
-        inception = InceptionV3(include_top=False, weights='imagenet', input_shape=input_size)
+        conv_model = self.load_model(stacker_args, input_size)
+        if not conv_model:
+            conv_model = InceptionV3(include_top=False, weights='imagenet', input_shape=input_size)
 
-        for layer in inception.layers:
+        for layer in conv_model.layers:
             layer.trainable = False
 
-        output = inception.output
-        output = AveragePooling2D((8, 8), strides=(8, 8), name='avg_pool')(output)
-        output = Flatten(name='flatten')(output)
-        image_processor = Model(inception.input, output)
+        conv_model_extra = conv_model.output
+        conv_model_extra = AveragePooling2D((8, 8), strides=(8, 8), name='avg_pool')(conv_model_extra)
+        conv_model_extra = Flatten(name='flatten')(conv_model_extra)
+
+        # image_processor = Model(inception.input, output)
 
         # Metadata model
-        metadata_processor = Sequential()
-        metadata_processor.add(Dense(1024, input_shape=(len(self.base_models_args) * 8,)))
-        metadata_processor.add(Dense(8, activation='softmax'))
+        meta_input = Input(shape=(len(self.base_models_args) * 8,))
+        meta_dense = Dense(1024)(meta_input)
+        meta_output = Dense(8, activation='softmax')(meta_dense)
 
         # Concatenate both
 
-        model = Sequential()
-        model.add(Merge([image_processor, metadata_processor], merge_mode='concat'))
-        model.add(Dense(8096, input_dim = image_processor.output_shape[1] + 8))  #check for this one
-        model.add(Activation('relu'))
-        model.add(Dense(self.n_classes, activation='softmax', name='predictions'))
+        merge_one = concatenate([conv_model_extra, meta_output])
+
+        merge_dense1 = Dense(8096)(merge_one)
+        merge_dense2 = Dense(8, activation='softmax', name='predictions')(merge_dense1)
+
+        model = Model(inputs=[conv_model.input, meta_input], outputs=merge_dense2)
 
         opt = optimizers.SGD(lr=0.001, momentum=0.9, decay=0.0, nesterov=True)
 
         model.compile(loss='categorical_crossentropy',
                       optimizer=opt,
                       metrics=["accuracy"])
+
         return model
 
     def train_stacker_s(self, model, s_train, labels):
@@ -212,20 +220,24 @@ if __name__ == '__main__':
                        'resnet_loss-1.9494444401883289.pkl']
     stacker_arg_file = []
     n_folds = 2
+    n_classes = 8
     use_cached = True
     # Read parameters from file
     print("Reading parameters for the models...")
     model_arg_list = []
     stacker_arg = []
     for file_name in model_arg_files:
-        param = pickle.load(open(file_name, "rb"))
+        param = pickle.load(open(models_dir + file_name, "rb"))
         name = [file_name.split('_')[0]]
         model_arg_list.append(name + param)
-#    stacker_arg = pickle.load(open(stacker_arg_file, "rb"))
+    if stacker_arg_file:
+        param = pickle.load(open(models_dir + stacker_arg, "rb"))
+        name = [file_name.split('_')[0]]
+        stacker_arg = name + param
     print("Parameters read")
     # Prepare data
     print("Loading training data...")
-    data, labels, _, _ = dataloader.load_train(filepath='data/train.hdf5',use_cached=use_cached)
+    data, labels, _, _ = dataloader.load_train(filepath='data/train.hdf5', use_cached=use_cached)
     print("Training data loaded")
     print("Creating {}-folds...".format(n_folds))
     cval_indx = CV.VGG_CV(data, labels, folds=n_folds, use_cached = True, path_cached='data/cv_data.pkl')
@@ -235,7 +247,7 @@ if __name__ == '__main__':
     print("Test data loaded")
     # Run everything
     print("Running stacking...")
-    st = Stacking(n_folds, stacker_arg, model_arg_list)
+    st = Stacking(n_folds, stacker_arg, model_arg_list, n_classes)
     predictions = st.fit_predict(data, labels, cval_indx, test)
     print("Saving results...")
     HY.write_submission('stacking_submission', predictions, filenames)

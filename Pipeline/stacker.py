@@ -41,39 +41,37 @@ class Stacking(object):
 
     def fit_predict(self, data, labels, cval_indx, test):
 
-        s_train = np.zeros((data.shape[0], len(self.base_models_args)*self.n_classes))
-        s_test = np.zeros((test.shape[0], len(self.base_models_args)*self.n_classes))
+        s_train = np.zeros((data.shape[0], self.n_classes))
+        s_test = np.zeros((test.shape[0], self.n_classes))
         print(len(self.base_models_args))
         for i in range(len(self.base_models_args)):
+            s_test_tmp = np.zeros((self.n_folds, test.shape[0], 8))
             print("Training model {}/{}".format(i, len(self.base_models_args)))
-            s_test_i = np.zeros((self.n_folds, test.shape[0], self.n_classes))
-            for j in range(self.n_folds):
-                print("Training without fold ̣{}".format(j))
-                # Divide training and validation
-                indx = [np.where(cval_indx == ind) for ind in np.unique(cval_indx)]
-                selector = [x for k,x in enumerate(indx) if k != j][0]
-                train_indx = selector[0].tolist()
-                train_indx.sort()
-                selector = [x for k, x in enumerate(indx) if k == j][0]
-                val_indx = selector[0].tolist()
-                val_indx.sort()
-                # Load the model
-                print("Loading model...")
-                base_model = self.load_model(self.base_models_args[i], data[0].shape[:2])
-                # Train
-                print("Training model...")
-                model = self.train_base_model(classifier_name = self.base_models_args[i][0], classifier=base_model,
-                                         val_fold=j, data=data, labels=labels, train_indx=train_indx, val_indx=val_indx)
-                print("Model saved")
-                # Get predictions
-                val_set = [data[k] for k in val_indx]
-                y_pred = base_model.predict(val_set)
-                s_train[val_indx, i*self.n_classes:i*self.n_classes+self.n_classes] = y_pred
-                s_test_i[j,:,:] = model.predict(test)
+            # Divide training and validation
+            indx = [np.where(cval_indx == ind) for ind in np.unique(cval_indx)]
+            selector = [x for k,x in enumerate(indx) if k != i][0]
+            train_indx = selector[0].tolist()
+            train_indx.sort()
+            selector = [x for k, x in enumerate(indx) if k == i][0]
+            val_indx = selector[0].tolist()
+            val_indx.sort()
 
-            # Average test predictions
-            tmp = np.mean( np.array(s_test_i), axis=0 )
-            s_test[:, i*self.n_classes:i*self.n_classes + self.n_classes] = tmp
+            # Load the model
+            print("Loading model...")
+            base_model = self.load_model(self.base_models_args[i], data[0].shape[:2])
+            # Train
+            print("Training model...")
+            model = self.train_base_model(classifier_name = self.base_models_args[i][0], classifier=base_model,
+                                     val_fold=i, data=data, labels=labels, train_indx=train_indx, val_indx=val_indx)
+            print("Model saved")
+            # Get predictions
+            val_set = [data[k] for k in val_indx]
+            y_pred = base_model.predict(val_set)
+            s_train[val_indx,:] = y_pred
+            s_test_tmp[i,:,:] = model.predict(test)
+
+        # Average test predictions
+        s_test = np.mean( np.array(s_test_tmp), axis=0 )
 
         # Save train and test set for the stacker
         s_train = np.savetxt('data/train_stacker.csv')

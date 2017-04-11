@@ -5,6 +5,7 @@ from Classifiers.inceptionV3 import Inception
 from Classifiers.resNet import ResNet
 from Classifiers.VGG_16 import VGG_16
 from Classifiers.CCN import CCN
+from keras.preprocessing.image import ImageDataGenerator
 
 import hyper as HY
 
@@ -82,6 +83,10 @@ class Stacking(object):
         np.savetxt('data/train_stacker.csv',s_train)
         np.savetxt('data/test_stacker.csv',s_test)
 
+        # Load the datasets if we have skipped the previous part
+        # s_train = np.array(np.loadtxt('data/train_stacker.csv'))
+        # s_test = np.array(np.loadtxt('data/test_stacker.csv'))
+
         # Create stacker
         print("Training stacker model...")
         # OPTION 1 Neural net
@@ -101,7 +106,6 @@ class Stacking(object):
         return y_pred
 
     def load_model(self, args, input_size):
-        name = args.pop(0)
         if name == 'inception':
             return Inception(input_size, 8, 50, *args)
         elif name == 'resnet':
@@ -124,7 +128,7 @@ class Stacking(object):
         model = classifier.model
         model.save_weights('models/stacking/{}_val{}.h5'.format(classifier_name, val_fold))
         model_json = model.to_json()
-        with open('models/stacking/{}_val{}.json'.format(classifier_name, val_fold), "w") as json_file:
+        with open('model_json/stacking/{}_val{}.json'.format(classifier_name, val_fold), "w") as json_file:
             json_file.write(model_json)
 
         return classifier
@@ -145,9 +149,9 @@ class Stacking(object):
         optimizer = stacker_args[-1]
 
         if model_name == 'inception':
-            conv_model = InceptionV3(include_top=False, weights='imagenet', input_shape=input_size)
+            conv_model = InceptionV3(include_top=False, weights='imagenet', input_shape=input_size + (3,))
         else:
-            conv_model = ResNet50(include_top=False,weights='imagenet', input_shape=input_size)
+            conv_model = ResNet50(include_top=False,weights='imagenet', input_shape=input_size + (3,))
 
         for layer in conv_model.layers:
             layer.trainable = False
@@ -159,7 +163,7 @@ class Stacking(object):
         # image_processor = Model(inception.input, output)
 
         # Metadata model
-        meta_input = Input(shape=(len(self.base_models_args) * 8,))
+        meta_input = Input(shape=(8,))
         meta_dense = Dense(1024)(meta_input)
         meta_output = Dense(8, activation='softmax')(meta_dense)
 
@@ -193,7 +197,7 @@ class Stacking(object):
         # Early stopping
         early = EarlyStopping(monitor='val_loss', min_delta=0, patience=10, verbose=0, mode='auto')
         # Fit the model
-        model.fit(s_train, labels, nb_epoch=100, batch_size=32, callbacks=early, shuffle='batch')
+        model.fit(s_train, labels, nb_epoch=100, batch_size=32, callbacks=[early], shuffle='batch')
 
         # Save model
         model.save_weights('models/resnet.h5')
@@ -206,6 +210,23 @@ class Stacking(object):
         return model
 
     def train_stacker_c(self, model, data, s_train, labels):
+
+        cval_splits = 5
+        batch_size = 64
+        print('start second cross validation')
+        cval_indx = CV.VGG_CV(data, labels, folds=cval_splits, path_cached='data/cv_data2.pkl')#, use_cached=True)
+        print('finished cross validation')
+        indx = [np.where(cval_indx == ind) for ind in np.unique(cval_indx)]
+
+        train_indx = np.hstack(indx[:-1])[0].tolist()
+        train_indx.sort()
+
+        val_indx = indx[-1][0].tolist()
+        val_indx.sort()
+
+        tg = train_generator(data, labels,s_train, train_indx, batch_size)
+        vg = train_generator(data, labels,s_train, val_indx, batch_size)
+
         # define the checkpoint
  #       filepath = 'models/stacker_model_loss-{loss:.4f}.hdf5'
  #       checkpoint = ModelCheckpoint(filepath, monitor='loss', verbose=1, save_best_only=True)
@@ -213,16 +234,66 @@ class Stacking(object):
         # Early stopping
         early = EarlyStopping(monitor='val_loss', min_delta=0, patience=10, verbose=0, mode='auto')
         # Fit the model
-        model.fit([data, s_train], labels, nb_epoch=50, batch_size=64, callbacks=early, shuffle='batch')
+#        model.fit([data, s_train], labels, nb_epoch=50, batch_size=64, callbacks=[early], shuffle='batch')
+        model.fit_generator(tg, steps_per_epoch=len(train_indx)//self.batch_size, validation_data=vg,
+                                 validation_steps=len(val_indx)//self.batch_size, callbacks=[early],
+                                 epochs = 50, verbose = 1)
+
 
         # Save model
         model.save_weights('models/stacker.h5')
         # serialize model to JSON
         model_json = model.to_json()
-        with open('model_json/resnet.json', "w") as json_file:
+        with open('model_json/stacker.json', "w") as json_file:
             json_file.write(model_json)
         print("Saved model to disk")
         return model
+
+    def train_generator(data, labels, s_train, train_indx, batch_size):
+
+        np.random.shuffle(train_indx)
+        start = 0
+        prob_8 = 1 / (np.sum(labels, axis=0) + 1)
+        prob_all = np.zeros(len(train_indx))
+        for ind, i in enumerate(train_indx):
+            prob_all[ind] = prob_8[labels[i] == 1]
+
+        prob_all = prob_all / np.sum(prob_all)
+
+        datagen = ImageDataGenerator(
+            rotation_range=15,
+            width_shift_range=0.2,
+            height_shift_range=0.2,
+            shear_range=0.2,
+            zoom_range=0.2,
+            horizontal_flip=True,
+            fill_mode='nearest')
+
+        num = 500
+        while True:
+            sampled_indx = np.random.choice(train_indx, size=num, p=prob_all)
+            d = []
+            l = []
+
+            for i in sampled_indx:
+                d.append(data[i])
+                l.append(s_train[i], labels[i])
+            d = np.array(d)
+            l = np.array(l)
+
+            datagen.fit(d)
+
+            cnt = 0
+            for X_batch, Y_batch in datagen.flow(d, l, batch_size=batch_size):
+                pred_s = [int(i[0]) for i in Y_batch]
+                Y_batch = [int(i[1]) for i in Y_batch]
+                weight = np.sum(Y_batch, axis=0) + 1
+                weight = np.clip(np.log(np.sum(weight) / weight), 1, 5)
+                weight = np.tile(weight, (len(Y_batch), 1))[Y_batch == 1]
+                yield ([X_batch, pred_s], Y_batch, weight)
+                cnt += batch_size
+                if cnt == num:
+                    break
 
 ###################################################################################
 ###################################################################################
@@ -247,7 +318,7 @@ if __name__ == '__main__':
         name = [file_name.split('_')[0]]
         model_arg_list.append(name + param)
     if stacker_arg_file:
-        param = pickle.load(open(models_dir + stacker_arg_file[0], "rb"))
+        param = list(pickle.load(open(models_dir + stacker_arg_file[0], "rb")))
         name = [stacker_arg_file[0].split('_')[0]]
         stacker_arg = name + param
     print("Parameters read")

@@ -37,11 +37,11 @@ class Stacking(object):
     def __init__(self, n_folds, stacker_args, base_models_args, n_classes):
         self.n_folds = n_folds
         # Check that the number of folds correspond to the number of base_models
-        if n_folds != len(base_models_args):
-            raise Warning("The number of folds does no correspond to the number of base models.\n"
-                          "Using just the first {} base models".format(n_folds))
+        if n_folds != len(base_models_args)+1:
+            raise Warning("The number of folds does no correspond to the number of base models+1.\n"
+                          "Trying to use just the first {} base models".format(n_folds-1))
         self.stacker_args = stacker_args
-        self.base_models_args = base_models_args[:n_folds]
+        self.base_models_args = base_models_args[:n_folds-1]
         self.n_classes = n_classes
 
     def fit_predict(self, data, labels, cval_indx, test):
@@ -96,8 +96,15 @@ class Stacking(object):
         # cross_val_score(stacker,s_train[:-1],s_train[-1],cv=10)
         # stacker.fit(s_train[:-1],s_train[-1])
         # OPTION 3 Convolutional net with metadata
+        indx = [np.where(cval_indx == ind) for ind in np.unique(cval_indx)]
+        selector = [x for k, x in enumerate(indx) if k != self.n_folds-1][0]
+        train_indx = selector[0].tolist()
+        train_indx.sort()
+        selector = [x for k, x in enumerate(indx) if k == self.n_folds-1][0]
+        val_indx = selector[0].tolist()
+        val_indx.sort()
         stacker = self.load_stacker_c(self.stacker_args, data[0].shape[:2])
-        stacker = self.train_stacker_c(stacker, data, s_train, labels)
+        stacker = self.train_stacker_c(stacker, data, s_train, labels, train_indx, val_indx)
 
         print("Making the final predictions...")
         y_pred = stacker.predict([test, s_test])
@@ -209,20 +216,11 @@ class Stacking(object):
 
         return model
 
-    def train_stacker_c(self, model, data, s_train, labels):
+    def train_stacker_c(self, model, data, s_train, labels, train_indx, val_indx):
 
-        cval_splits = 5
         batch_size = 64
         print('start second cross validation')
-        cval_indx = CV.VGG_CV(data, labels, folds=cval_splits, path_cached='data/cv_data2.pkl')#, use_cached=True)
-        print('finished cross validation')
-        indx = [np.where(cval_indx == ind) for ind in np.unique(cval_indx)]
 
-        train_indx = np.hstack(indx[:-1])[0].tolist()
-        train_indx.sort()
-
-        val_indx = indx[-1][0].tolist()
-        val_indx.sort()
 
         tg = self.train_generator(data, labels, s_train, train_indx, batch_size)
         vg = self.train_generator(data, labels, s_train, val_indx, batch_size)
@@ -305,7 +303,7 @@ if __name__ == '__main__':
                        'resnet_loss-2.091301735867275.pkl',
                        'resnet_norm-144806.pkl']
     stacker_arg_file = ['inception_fine_loss-2.929521924498453.pkl']
-    n_folds = 4
+    n_folds = 5
     n_classes = 8
     use_cached = True
     # Read parameters from file

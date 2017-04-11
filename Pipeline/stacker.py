@@ -16,11 +16,10 @@ from keras.callbacks import ModelCheckpoint
 
 import VGG_CV as CV
 from keras.optimizers import SGD
-from hyper import train_generator
 from keras.callbacks import EarlyStopping
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import cross_val_score
-
+from hyper import train_generator
 from keras.layers.core import Dense, Flatten
 from keras.layers import AveragePooling2D
 from keras.models import Model
@@ -64,10 +63,10 @@ class Stacking(object):
 
             # Load the model
             print("Loading model...")
-            base_model = self.load_model(self.base_models_args[i], data[0].shape[:2])
+            name, base_model = self.load_model(self.base_models_args[i], data[0].shape[:2])
             # Train
             print("Training model...")
-            model = self.train_base_model(classifier_name = self.base_models_args[i][0], classifier=base_model,
+            model = self.train_base_model(classifier_name = name, classifier=base_model,
                                      val_fold=i, data=data, labels=labels, train_indx=train_indx, val_indx=val_indx)
             print("Model saved")
             # Get predictions
@@ -101,19 +100,20 @@ class Stacking(object):
         stacker = self.train_stacker_c(stacker, data, s_train, labels)
 
         print("Making the final predictions...")
-        y_pred = stacker.predict(s_test)
+        y_pred = stacker.predict([test, s_test])
 
         return y_pred
 
     def load_model(self, args, input_size):
+        name = args.pop(0)
         if name == 'inception':
-            return Inception(input_size, 8, 50, *args)
+            return name, Inception(input_size, 8, 50, *args)
         elif name == 'resnet':
-            return ResNet(input_size, 8, 50, *args)
+            return name, ResNet(input_size, 8, 50, *args)
         elif name == 'vgg':
-            return VGG_16(input_size, 8, 50, *args)
+            return name, VGG_16(input_size, 8, 50, *args)
         elif name == 'ccn':
-            return CCN(input_size, 8, 50, *args)
+            return name, CCN(input_size, 8, 50, *args)
         return []
 
 
@@ -164,7 +164,7 @@ class Stacking(object):
 
         # Metadata model
         meta_input = Input(shape=(8,))
-        meta_dense = Dense(1024)(meta_input)
+        meta_dense = Dense(64)(meta_input)
         meta_output = Dense(8, activation='softmax')(meta_dense)
 
         # Concatenate both
@@ -224,8 +224,8 @@ class Stacking(object):
         val_indx = indx[-1][0].tolist()
         val_indx.sort()
 
-        tg = train_generator(data, labels,s_train, train_indx, batch_size)
-        vg = train_generator(data, labels,s_train, val_indx, batch_size)
+        tg = self.train_generator(data, labels, s_train, train_indx, batch_size)
+        vg = self.train_generator(data, labels, s_train, val_indx, batch_size)
 
         # define the checkpoint
  #       filepath = 'models/stacker_model_loss-{loss:.4f}.hdf5'
@@ -235,8 +235,8 @@ class Stacking(object):
         early = EarlyStopping(monitor='val_loss', min_delta=0, patience=10, verbose=0, mode='auto')
         # Fit the model
 #        model.fit([data, s_train], labels, nb_epoch=50, batch_size=64, callbacks=[early], shuffle='batch')
-        model.fit_generator(tg, steps_per_epoch=len(train_indx)//self.batch_size, validation_data=vg,
-                                 validation_steps=len(val_indx)//self.batch_size, callbacks=[early],
+        model.fit_generator(tg, steps_per_epoch=len(train_indx)//64, validation_data=vg,
+                                 validation_steps=len(val_indx)//64, callbacks=[early],
                                  epochs = 50, verbose = 1)
 
 
@@ -249,7 +249,7 @@ class Stacking(object):
         print("Saved model to disk")
         return model
 
-    def train_generator(data, labels, s_train, train_indx, batch_size):
+    def train_generator(self, data, labels, s_train, train_indx, batch_size):
 
         np.random.shuffle(train_indx)
         start = 0
@@ -277,7 +277,7 @@ class Stacking(object):
 
             for i in sampled_indx:
                 d.append(data[i])
-                l.append(s_train[i], labels[i])
+                l.append((s_train[i], labels[i]))
             d = np.array(d)
             l = np.array(l)
 
@@ -285,8 +285,8 @@ class Stacking(object):
 
             cnt = 0
             for X_batch, Y_batch in datagen.flow(d, l, batch_size=batch_size):
-                pred_s = [int(i[0]) for i in Y_batch]
-                Y_batch = [int(i[1]) for i in Y_batch]
+                pred_s = np.asarray([i[0] for i in Y_batch])
+                Y_batch = np.asarray([i[1] for i in Y_batch])
                 weight = np.sum(Y_batch, axis=0) + 1
                 weight = np.clip(np.log(np.sum(weight) / weight), 1, 5)
                 weight = np.tile(weight, (len(Y_batch), 1))[Y_batch == 1]

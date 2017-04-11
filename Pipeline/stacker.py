@@ -8,6 +8,7 @@ from Classifiers.CCN import CCN
 
 import hyper as HY
 
+from keras.applications import ResNet50
 from keras.models import Sequential
 from keras.layers.core import Dense
 from keras.callbacks import ModelCheckpoint
@@ -35,6 +36,10 @@ class Stacking(object):
 
     def __init__(self, n_folds, stacker_args, base_models_args, n_classes):
         self.n_folds = n_folds
+        # Check that the number of folds correspond to the number of base_models
+        if n_folds != len(base_models_args):
+            raise Warning("The number of folds does no correspond to the number of base models.\n"
+                          "Using just the first {} base models".format(n_folds))
         self.stacker_args = stacker_args
         self.base_models_args = base_models_args[:n_folds]
         self.n_classes = n_classes
@@ -46,7 +51,7 @@ class Stacking(object):
         print(len(self.base_models_args))
         for i in range(len(self.base_models_args)):
             s_test_tmp = np.zeros((self.n_folds, test.shape[0], 8))
-            print("Training model {}/{}".format(i, len(self.base_models_args)))
+            print("Training model {}/{}".format(i+1, len(self.base_models_args)))
             # Divide training and validation
             indx = [np.where(cval_indx == ind) for ind in np.unique(cval_indx)]
             selector = [x for k,x in enumerate(indx) if k != i][0]
@@ -65,7 +70,7 @@ class Stacking(object):
                                      val_fold=i, data=data, labels=labels, train_indx=train_indx, val_indx=val_indx)
             print("Model saved")
             # Get predictions
-            val_set = [data[k] for k in val_indx]
+            val_set = np.array([data[k] for k in val_indx])
             y_pred = base_model.predict(val_set)
             s_train[val_indx,:] = y_pred
             s_test_tmp[i,:,:] = model.predict(test)
@@ -74,8 +79,8 @@ class Stacking(object):
         s_test = np.mean( np.array(s_test_tmp), axis=0 )
 
         # Save train and test set for the stacker
-        s_train = np.savetxt('data/train_stacker.csv')
-        s_test = np.savetxt('data/test_stacker.csv')
+        np.savetxt('data/train_stacker.csv',s_train)
+        np.savetxt('data/test_stacker.csv',s_test)
 
         # Create stacker
         print("Training stacker model...")
@@ -117,9 +122,9 @@ class Stacking(object):
 
         # Save classifier
         model = classifier.model
-        model.save_weights('/models/stacking/{}_val{}.h5'.format(classifier_name, val_fold))
+        model.save_weights('models/stacking/{}_val{}.h5'.format(classifier_name, val_fold))
         model_json = model.to_json()
-        with open('/models/stacking/{}_val{}.json'.format(classifier_name, val_fold), "w") as json_file:
+        with open('models/stacking/{}_val{}.json'.format(classifier_name, val_fold), "w") as json_file:
             json_file.write(model_json)
 
         return classifier
@@ -135,9 +140,14 @@ class Stacking(object):
     def load_stacker_c(self, stacker_args, input_size):
 
         # Image model
-        conv_model = self.load_model(stacker_args, input_size)
-        if not conv_model:
+        model_name = stacker_args.pop(0)
+        lr = stacker_args.pop(0)
+        optimizer = stacker_args[-1]
+
+        if model_name == 'inception':
             conv_model = InceptionV3(include_top=False, weights='imagenet', input_shape=input_size)
+        else:
+            conv_model = ResNet50(include_top=False,weights='imagenet', input_shape=input_size)
 
         for layer in conv_model.layers:
             layer.trainable = False
@@ -162,7 +172,12 @@ class Stacking(object):
 
         model = Model(inputs=[conv_model.input, meta_input], outputs=merge_dense2)
 
-        opt = optimizers.SGD(lr=0.001, momentum=0.9, decay=0.0, nesterov=True)
+        if optimizer == 'adam':
+            opt = optimizers.adam(lr=lr)
+        elif optimizer == 'adadelta':
+            opt = optimizers.adadelta(lr = lr)
+        else:
+            opt=optimizers.SGD(lr=lr, momentum=0.9, decay=0.0, nesterov=True)
 
         model.compile(loss='categorical_crossentropy',
                       optimizer=opt,
@@ -198,7 +213,7 @@ class Stacking(object):
         # Early stopping
         early = EarlyStopping(monitor='val_loss', min_delta=0, patience=10, verbose=0, mode='auto')
         # Fit the model
-        model.fit([data, s_train], labels, nb_epoch=100, batch_size=32, callbacks=early, shuffle='batch')
+        model.fit([data, s_train], labels, nb_epoch=50, batch_size=64, callbacks=early, shuffle='batch')
 
         # Save model
         model.save_weights('models/stacker.h5')
@@ -214,9 +229,9 @@ class Stacking(object):
 
 if __name__ == '__main__':
     models_dir = "models/"
-    model_arg_files = ['resnet_loss-1.4480618794978652.pkl',
-                       'resnet_loss-1.9494444401883289.pkl']
-    stacker_arg_file = []
+    model_arg_files = ['inception_fine_loss-1.6862200698411534.pkl',
+                       'inception_fine_loss-1.6862200698411534.pkl']
+    stacker_arg_file = ['inception_fine_loss-1.6862200698411534.pkl']
     n_folds = 2
     n_classes = 8
     use_cached = True
@@ -225,12 +240,13 @@ if __name__ == '__main__':
     model_arg_list = []
     stacker_arg = []
     for file_name in model_arg_files:
-        param = pickle.load(open(models_dir + file_name, "rb"))
+        a = models_dir + file_name
+        param = list(pickle.load(open(models_dir + file_name, "rb")))
         name = [file_name.split('_')[0]]
         model_arg_list.append(name + param)
     if stacker_arg_file:
-        param = pickle.load(open(models_dir + stacker_arg, "rb"))
-        name = [file_name.split('_')[0]]
+        param = pickle.load(open(models_dir + stacker_arg_file[0], "rb"))
+        name = [stacker_arg_file[0].split('_')[0]]
         stacker_arg = name + param
     print("Parameters read")
     # Prepare data
@@ -238,7 +254,7 @@ if __name__ == '__main__':
     data, labels, _, _ = dataloader.load_train(filepath='data/train.hdf5', use_cached=use_cached)
     print("Training data loaded")
     print("Creating {}-folds...".format(n_folds))
-    cval_indx = CV.VGG_CV(data, labels, folds=n_folds, use_cached = True, path_cached='data/cv_data.pkl')
+    cval_indx = CV.VGG_CV(data, labels, folds=n_folds, use_cached = use_cached, path_cached='data/cv_data.pkl')
     print("Folds created")
     print("Load test data")
     test, filenames, _ = dataloader.load_test(filepath='data/test_stg1.hdf5', use_cached=use_cached)

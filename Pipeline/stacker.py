@@ -230,9 +230,11 @@ class Stacking(object):
 if __name__ == '__main__':
     models_dir = "models/"
     model_arg_files = ['inception_fine_loss-1.6862200698411534.pkl',
-                       'inception_fine_loss-1.6862200698411534.pkl']
-    stacker_arg_file = ['inception_fine_loss-1.6862200698411534.pkl']
-    n_folds = 2
+                       'inception_fine_loss-1.7430047196459908.pkl',
+                       'resnet_loss-2.091301735867275.pkl',
+                       'resnet_norm-144806.pkl']
+    stacker_arg_file = ['inception_fine_loss-2.929521924498453.pkl']
+    n_folds = 4
     n_classes = 8
     use_cached = True
     # Read parameters from file
@@ -251,13 +253,13 @@ if __name__ == '__main__':
     print("Parameters read")
     # Prepare data
     print("Loading training data...")
-    data, labels, _, _ = dataloader.load_train(filepath='data/train.hdf5', use_cached=use_cached)
+    data, labels, _, _ = dataloader.load_train(filepath='data/train_heat.hdf5', use_cached=use_cached)
     print("Training data loaded")
     print("Creating {}-folds...".format(n_folds))
     cval_indx = CV.VGG_CV(data, labels, folds=n_folds, use_cached = use_cached, path_cached='data/cv_data.pkl')
     print("Folds created")
     print("Load test data")
-    test, filenames, _ = dataloader.load_test(filepath='data/test_stg1.hdf5', use_cached=use_cached)
+    test, filenames, _ = dataloader.load_test(filepath='data/test_heat.hdf5', use_cached=use_cached)
     print("Test data loaded")
     # Run everything
     print("Running stacking...")

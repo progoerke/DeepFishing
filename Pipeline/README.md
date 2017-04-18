@@ -1,5 +1,5 @@
 # How to
-To train a model and create a submission file with the predictions on the test set, call `python3 hyper.py -r`. (If you run for the first time, check the installation comments under **Installation**)
+To train a model and create a submission file with the predictions on the test set, call `python3 hyper.py -r`. The submission can be viewed in first.csv. (If you run for the first time, check the installation comments under **Installation**)
 
 # Content
 | File | |

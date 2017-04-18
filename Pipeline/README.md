@@ -40,11 +40,14 @@ For the code several preparations are needed
 3. Change source code of keras-vis package in `/usr/local/lib/python3.6/site-packages/vis/utils`, line 31:
 ```
 def reverse_enumerate(iterable):
-    """Enumerate over an iterable in reverse order while retaining proper indexes, without creating any copies.
-    """
+  	
+  	...
+
     return itertool.izip(reversed(range(len(iterable))), reversed(iterable))
     ```
+
     change to
+    
     ```
     return zip(reversed(range(len(iterable))), reversed(iterable))
     ```

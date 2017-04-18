@@ -35,7 +35,7 @@ To train a model and create a submission file with the predictions on the test s
 
 # Installation
 For the code several preparations are needed
-1. OpenCV 3 installation
+1. OpenCV 3 installation (quite different on various machines)
 2. keras-vis Python package installation from github, e.g. with `pip3 install git+https://github.com/raghakot/keras-vis`
 3. Change source code of keras-vis package in `/usr/local/lib/python3.6/site-packages/vis/utils`, line 31:
 ```
@@ -51,4 +51,10 @@ def reverse_enumerate(iterable):
 ```
     return zip(reversed(range(len(iterable))), reversed(iterable))
 ```
-4. Put training data in Pipeline/data/train/
+4. Possible other Python package installations
+  * Hyperopt `pip3 install hyperopt`
+  * Keras `pip3 install keras`, with Tensorflow backend
+  * [Tensorflow](https://www.tensorflow.org/install/)
+  * Skimage `pip3 install scikit-image`
+  * h5py `pip3 install h5py`
+5. Put training data in Pipeline/data/train/ and test data in Pipeline/data/test_stg1/

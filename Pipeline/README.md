@@ -44,11 +44,11 @@ def reverse_enumerate(iterable):
   	...
 
     return itertool.izip(reversed(range(len(iterable))), reversed(iterable))
-    ```
+```
 
     change to
     
-    ```
+```
     return zip(reversed(range(len(iterable))), reversed(iterable))
-    ```
+```
 4. Put training data in Pipeline/data/train/
